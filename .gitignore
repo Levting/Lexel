@@ -1,6 +1,9 @@
 # Entorno virtual
 venv/
 
+# Archivo media
+media/
+
 # Archivos de caché de Python
 __pycache__/
 *.py[cod]
