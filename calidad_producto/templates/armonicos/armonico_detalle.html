@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 
-{% block content %}
-  <h1>{{ archivo.archivo }}</h1>
+{% block title %}Detalles{% endblock %}
 
-  
+
+{% block content %}
+  <h1>{{ nombre_archivo }}</h1>
+
+  <p>{{ archivo_info.nombre_columna }}</p>
 {% endblock %}

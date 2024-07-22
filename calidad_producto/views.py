@@ -1,13 +1,16 @@
+import pytz
+import locale
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArchivoForm
 from .models import Archivo, ArchivoInfo
 import pandas as pd
 from .lectura_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
 from django.contrib import messages
-from django.contrib.messages import get_messages
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
+
+from babel.dates import format_datetime
 
 
 def inicio(request):  # /calidad_producto
@@ -15,16 +18,39 @@ def inicio(request):  # /calidad_producto
 
 
 def vista_armonicos(request):
-    archivos_armonicos = Archivo.objects.all()
-    return render(request, 'armonicos/armonicos.html', {'archivos': archivos_armonicos})
+
+    # Obtener todos los archivos desde la base de datos mediante la fecha ascendetemente
+    archivos_armonicos = Archivo.objects.all().order_by('subido_el')
+
+    # Configurar la zona horaria
+    tz = pytz.timezone('America/Guayaquil')
+
+    # Todos los archivos inician con un "/archivo " y la fecha esta en ingles, se crea una lista de diccionarios con toda la información de cada archivo
+    archivos_con_nombres_modificados = [
+        {
+            'id': archivo.id,
+            'archivo': archivo.archivo.name.split('/')[-1],
+            'subido_el': format_datetime(archivo.subido_el.astimezone(tz), format='dd MMMM yyyy, hh:mm a', locale='es_ES')
+        }
+        for archivo in archivos_armonicos
+    ]
+
+    # Renderizamos los nombres formateados en la vista de "armonicos.html" pasándolos por parámetro
+    return render(request, 'armonicos/armonicos.html', {'archivos': archivos_con_nombres_modificados})
 
 
 def vista_armonico_detalle(request, archivo_id):
     # archivo = Archivo.objects.get(id=archivo_id)
     archivo = get_object_or_404(Archivo, id=archivo_id)
-    #archivo_info = archivo.info.all()
 
-    #return render(request, 'armonicos/armonico_detalle.html', {'archivo': archivo, 'archivo_info': archivo_info})
+    # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
+    nombre_archivo = archivo.archivo.url.split('/')[-1]
+    print("Nombre del Archivo Seleccionado: ", nombre_archivo)
+
+    archivo_info = archivo.info.all()
+    print(archivo_info.values())
+
+    return render(request, 'armonicos/armonico_detalle.html', {'nombre_archivo': nombre_archivo, 'archivo_info': archivo_info})
 
 
 def vista_tendencia(request):
@@ -68,6 +94,7 @@ def crear_armonico(request):
         # Crear un formulario vacío
         formulario = ArchivoForm()
 
+    # renderizar el formulario
     return render(request, 'armonicos/crear_armonico.html', {'form': formulario})
 
 
