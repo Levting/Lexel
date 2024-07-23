@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'calidad_producto'  # Aplicacion Añadida
+    'calidad_producto',  # Aplicacion Añadida
+    'calidad_servicio_tecnico',  # Aplicacion Añadida
+    'principal',  # Aplicacion Añadida
 ]
 
 MIDDLEWARE = [

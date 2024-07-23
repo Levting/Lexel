@@ -20,9 +20,11 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('calidad_producto.urls')),
+    path('', include('principal.urls')),
+    path('calidad-producto/', include('calidad_producto.urls')),
+    path('calidad-servicio-tecnico/', include('calidad_servicio_tecnico.urls')),
 ]
 
 # Añadir la ruta de los archivos multimedia
-#if settings.DEBUG:
+# if settings.DEBUG:
 #    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

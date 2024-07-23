@@ -11,8 +11,8 @@ from django.db import DatabaseError
 from pandas.errors import EmptyDataError
 
 
-def inicio(request):  # /calidad_producto
-    return render(request, 'calidad_producto.html')
+def index(request):
+    return render(request, 'calidad_producto/index.html')
 
 
 def vista_armonicos(request):
@@ -75,7 +75,7 @@ def crear_armonico(request):
             try:
                 procesar_archivo_armonico(nuevo_archivo)
                 messages.success(request, 'Archivo procesado correctamente.')
-                return redirect('armonicos')
+                return redirect('vista_armonicos')
 
             except (ValueError, EmptyDataError) as e:
                 messages.error(
@@ -116,7 +116,7 @@ def eliminar_armonico(request, archivo_id):
         messages.success(request, 'Archivo eliminado correctamente.')
 
         # Redirigir a la página de armonicos
-        return redirect('armonicos')
+        return redirect('vista_armonicos')
 
 
 def procesar_archivo_armonico(archivo_excel):

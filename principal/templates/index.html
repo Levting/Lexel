@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="text-center p-5 rounded overlay">
+    <h1 class="display-4 mb-4" style="font-weight: bold;">Bienvenido a Lexel</h1>
+    <p class="lead mb-5">Seleccione una opción para continuar</p>
+    <div>
+      <a href="{% url 'calidad_producto_index' %}" class="btn btn-primary btn-lg mx-2" style="min-width: 200px;">Calidad del Producto</a>
+      <a href="{% url 'calidad_servicio_tecnico_index' %}" class="btn btn-secondary btn-lg mx-2" style="min-width: 200px;">Calidad del Servicio Técnico</a>
+    </div>
+  </div>
+{% endblock %}
