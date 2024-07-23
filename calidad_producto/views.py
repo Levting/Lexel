@@ -1,16 +1,14 @@
 import pytz
-import locale
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ArchivoForm
-from .models import Archivo, ArchivoInfo
 import pandas as pd
-from .lectura_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
+from .forms import ArchivoForm
 from django.contrib import messages
+from .models import Archivo, ArchivoInfo
+from babel.dates import format_datetime
+from django.shortcuts import render, redirect, get_object_or_404
+from .lectura_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
-
-from babel.dates import format_datetime
 
 
 def inicio(request):  # /calidad_producto
@@ -19,7 +17,7 @@ def inicio(request):  # /calidad_producto
 
 def vista_armonicos(request):
 
-    # Obtener todos los archivos desde la base de datos mediante la fecha ascendetemente
+    # Obtener todos los archivos desde la base de datos mediante la fecha ascendentemente
     archivos_armonicos = Archivo.objects.all().order_by('subido_el')
 
     # Configurar la zona horaria
@@ -40,13 +38,13 @@ def vista_armonicos(request):
 
 
 def vista_armonico_detalle(request, archivo_id):
-    # archivo = Archivo.objects.get(id=archivo_id)
+    # Obtener los archivos evitando que el servidor colapse
     archivo = get_object_or_404(Archivo, id=archivo_id)
 
     # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
     nombre_archivo = archivo.archivo.url.split('/')[-1]
-    print("Nombre del Archivo Seleccionado: ", nombre_archivo)
 
+    # Obtener las columnas del archivo es específico
     archivo_info = archivo.info.all()
     print(archivo_info.values())
 
@@ -54,10 +52,12 @@ def vista_armonico_detalle(request, archivo_id):
 
 
 def vista_tendencia(request):
+    # Renderizar a tendencias.html
     return render(request, 'tendencias/tendencias.html')
 
 
 def crear_armonico(request):
+    # Si la solicitud se trata de enviar datos, es decir, crear un archivo
     if request.method == 'POST':
         # Crear un formulario con los datos del archivo
         formulario = ArchivoForm(request.POST, request.FILES)
@@ -91,15 +91,19 @@ def crear_armonico(request):
             # Mostrar un mensaje de error si el formulario no es válido
             messages.error(request, 'Error al procesar el formulario.')
     else:
+        # Si solo se trata de obtener datos, es decir para mostrar la página, vamos a mostrar el formulario vacío
         # Crear un formulario vacío
         formulario = ArchivoForm()
 
-    # renderizar el formulario
+    # Renderizar el formulario, va aqui para el manejo de los errores.
     return render(request, 'armonicos/crear_armonico.html', {'form': formulario})
 
 
 def procesar_archivo_armonico(archivo_excel):
+    # Leer el archivo cargado
     df = leer_archivo(archivo_excel.archivo.path)
+
+    # Controlamos la lectura del archivo, para que sea correcta.
     if df is None:
         raise ValueError("No se pudo leer el archivo.")
 
