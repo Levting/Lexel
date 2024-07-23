@@ -104,6 +104,19 @@ def crear_armonico(request):
     # Renderizar el formulario, va aqui para el manejo de los errores.
     return render(request, 'armonicos/crear_armonico.html', {'form': formulario})
 
+def eliminar_armonico(request, archivo_id):
+    # Obtener el archivo evitando que el servidor colapse
+    archivo = get_object_or_404(Archivo, id=archivo_id)
+
+    if request.method == 'POST':
+        # Eliminar el archivo
+        archivo.delete()
+
+        # Mostrar un mensaje de éxito
+        messages.success(request, 'Archivo eliminado correctamente.')
+
+        # Redirigir a la página de armonicos
+        return redirect('armonicos')
 
 def procesar_archivo_armonico(archivo_excel):
     # Leer el archivo cargado
