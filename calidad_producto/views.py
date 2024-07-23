@@ -44,12 +44,11 @@ def vista_armonico_detalle(request, archivo_id):
 
     # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
     nombre_archivo = archivo.archivo.url.split('/')[-1]
-
     print("Nombre del Archivo Seleccionado: ", nombre_archivo)
-    print("Archivo Seleccionado: ", archivo.archivo.path)
 
     # Obtener la información del archivo
     archivo_info_obj = archivo.info.first()
+    print("Archivo Info Objeto: ", archivo_info_obj)
     archivo_info = archivo_info_obj.data if archivo_info_obj else {}
 
     print("Información del archivo seleccionado: ", archivo_info)
@@ -104,6 +103,7 @@ def crear_armonico(request):
     # Renderizar el formulario, va aqui para el manejo de los errores.
     return render(request, 'armonicos/crear_armonico.html', {'form': formulario})
 
+
 def eliminar_armonico(request, archivo_id):
     # Obtener el archivo evitando que el servidor colapse
     archivo = get_object_or_404(Archivo, id=archivo_id)
@@ -118,6 +118,7 @@ def eliminar_armonico(request, archivo_id):
         # Redirigir a la página de armonicos
         return redirect('armonicos')
 
+
 def procesar_archivo_armonico(archivo_excel):
     # Leer el archivo cargado
     df = leer_archivo(archivo_excel.archivo.path)
@@ -126,14 +127,14 @@ def procesar_archivo_armonico(archivo_excel):
     if df is None:
         raise ValueError("No se pudo leer el archivo.")
 
-    print(df.to_string(index=False))
+    # print(df.to_string(index=False))
 
     print("DataFrame Original:")
     print(df)  # Mostrar el DataFrame completo
 
     # SELECCIONAR LAS FILAS Y COLUMNAS NECESARIAS
-    filas = slice(1, None)
-    columnas = slice(1, None)
+    filas = slice(11, -1)
+    columnas = slice(10, None)
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
     print("\nDataFrame Seleccionado:")
@@ -146,7 +147,7 @@ def procesar_archivo_armonico(archivo_excel):
         pd.to_numeric, errors='coerce').fillna(0)
 
     print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
-    print(df_seleccionado.to_string(index=False))
+    print(df_seleccionado)
 
     valores_mayores = contar_valores_mayores(df_seleccionado, 5)
 
@@ -161,15 +162,23 @@ def procesar_archivo_armonico(archivo_excel):
     print(porcentaje_valores_mayores)
 
     print("\nInformación:")
+    # Crear un diccionario con los datos de las columnas redondeados a 5 decimales
     data = {
-        columna: porcentaje_valores_mayores[columna].round(5)
+        # columna: porcentaje_valores_mayores[columna].round(5)
+        columna: {
+            'conteo': int(valores_mayores[columna]),  # Convertir a int
+            # Convertir a float
+            'porcentaje': float(porcentaje_valores_mayores[columna].round(5))
+        }
         for columna in df_seleccionado.columns
     }
 
-    print(data)
+    print("\nData: ", data)
 
-    print(data.items())
+    # Número de columnas
+    print("Cantidad: ", len(data))
 
+    # Crear un objeto ArchivoInfo con la información del archivo
     ArchivoInfo.objects.create(
         archivo=archivo_excel,
         data=data

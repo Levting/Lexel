@@ -14,14 +14,17 @@
         <tr>
           <th scope="col">#</th>
           <th scope="col">Nombre de la Columna</th>
+          <th scope="col">Conteo</th>
           <th scope="col">Valor (%)</th>
         </tr>
       </tr>
-      {% for columna, valor in archivo_info.items %}
+      {% for columna, info in archivo_info.items %}
         <tr>
           <th scope="row">{{ forloop.counter }}
           <td>{{ columna }}</td>
-          <td>{{ valor }} %</td>
+          <td>{{ info.conteo }}</td>
+          <td>{{ info.porcentaje  }} %</td>
+
         </tr>
       {% endfor %}
     </table>
