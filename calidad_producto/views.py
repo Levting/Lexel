@@ -28,6 +28,7 @@ def vista_armonicos(request):
         {
             'id': archivo.id,
             'archivo': archivo.archivo.name.split('/')[-1],
+            # 'subido_el': archivo.subido_el
             'subido_el': format_datetime(archivo.subido_el.astimezone(tz), format='dd MMMM yyyy, hh:mm a', locale='es_ES')
         }
         for archivo in archivos_armonicos
@@ -38,15 +39,20 @@ def vista_armonicos(request):
 
 
 def vista_armonico_detalle(request, archivo_id):
-    # Obtener los archivos evitando que el servidor colapse
+    # Obtener el archivo evitando que el servidor colapse
     archivo = get_object_or_404(Archivo, id=archivo_id)
 
     # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
     nombre_archivo = archivo.archivo.url.split('/')[-1]
 
-    # Obtener las columnas del archivo es específico
-    archivo_info = archivo.info.all()
-    print(archivo_info.values())
+    print("Nombre del Archivo Seleccionado: ", nombre_archivo)
+    print("Archivo Seleccionado: ", archivo.archivo.path)
+
+    # Obtener la información del archivo
+    archivo_info_obj = archivo.info.first()
+    archivo_info = archivo_info_obj.data if archivo_info_obj else {}
+
+    print("Información del archivo seleccionado: ", archivo_info)
 
     return render(request, 'armonicos/armonico_detalle.html', {'nombre_archivo': nombre_archivo, 'archivo_info': archivo_info})
 
@@ -141,21 +147,17 @@ def procesar_archivo_armonico(archivo_excel):
     print("\nPorcentaje de valores mayores a 5 por columna:")
     print(porcentaje_valores_mayores)
 
-    # Formatear la salida como la deseas
-    for columna in df_seleccionado.columns:
+    print("\nInformación:")
+    data = {
+        columna: porcentaje_valores_mayores[columna].round(5)
+        for columna in df_seleccionado.columns
+    }
 
-        ArchivoInfo.objects.create(
-            nombre_columna=columna,
-            valor=porcentaje_valores_mayores[columna].round(2),
-            archivo=archivo_excel,
-        )
+    print(data)
 
-    """ # Guardar la información en el modelo ArchivoInfo
-    for columna in df_seleccionado.columns:
-        for valor in df[columna]:
-            print(columna, valor)
-            ArchivoInfo.objects.create(
-                archivo=archivo_excel,
-                nombre_columna=columna,
-                valor=valor
-            ) """
+    print(data.items())
+
+    ArchivoInfo.objects.create(
+        archivo=archivo_excel,
+        data=data
+    )

@@ -9,11 +9,3 @@ class ArchivoForm(forms.ModelForm):
     class Meta:
         model = Archivo
         fields = ['archivo']
-
-    def control_nombre_archivo(self):
-        archivo = self.cleaned_data['archivo']
-        print(archivo.name)
-        if Archivo.objects.filter(archivo=archivo).exists():
-            raise forms.ValidationError(
-                'El archivo ya existe en la base de datos.')
-        return archivo

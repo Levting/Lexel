@@ -1,10 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title %}Detalles{% endblock %}
-
+{% block title %}
+  Detalles
+{% endblock %}
 
 {% block content %}
-  <h1>{{ nombre_archivo }}</h1>
+  <div class="container mt-4">
+    <h1>{{ nombre_archivo }}</h1>
 
-  <p>{{ archivo_info.nombre_columna }}</p>
+    <h4>Información del Archivo</h4>
+    <table class="table table-hover">
+      <tr>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Nombre de la Columna</th>
+          <th scope="col">Valor (%)</th>
+        </tr>
+      </tr>
+      {% for columna, valor in archivo_info.items %}
+        <tr>
+          <th scope="row">{{ forloop.counter }}
+          <td>{{ columna }}</td>
+          <td>{{ valor }} %</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </div>
 {% endblock %}

@@ -16,14 +16,16 @@ class Archivo(models.Model):
 
 class ArchivoInfo(models.Model):
     """
-    Modelo para almacenar la información extraída de los archivos subidos
+    Modelo para almacenar la información extraída de los archivos subidos en un campo JSON
     """
+    # archivo = models.ForeignKey(Archivo, on_delete=models.CASCADE, related_name='info')
+    # nombre_columna = models.CharField(max_length=100)
+    # valor = models.FloatField()
+
+    # Definir la relacion inversa con el modelo, para acceder al ubjeto Archivo desde ArchivoInfo
     archivo = models.ForeignKey(
         Archivo, on_delete=models.CASCADE, related_name='info')
-    nombre_columna = models.CharField(max_length=100)
-    valor = models.FloatField()
-
-    # data = models.JSONField()
+    data = models.JSONField(default=dict)
 
     def __str__(self):
-        return self.nombre_columna + ' - ' + str(self.valor)
+        return f'{self.archivo.archivo.name} - {self.data}'
