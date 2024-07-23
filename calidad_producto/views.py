@@ -129,16 +129,16 @@ def procesar_archivo_armonico(archivo_excel):
 
     # print(df.to_string(index=False))
 
-    print("DataFrame Original:")
-    print(df)  # Mostrar el DataFrame completo
+    # print("DataFrame Original:")
+    # print(df)
 
     # SELECCIONAR LAS FILAS Y COLUMNAS NECESARIAS
     filas = slice(11, -1)
     columnas = slice(10, None)
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
-    print("\nDataFrame Seleccionado:")
-    print(df_seleccionado)
+    # print("\nDataFrame Seleccionado:")
+    # print(df_seleccionado)
 
     df_seleccionado = ajustar_encabezado(df_seleccionado)
 
@@ -146,8 +146,8 @@ def procesar_archivo_armonico(archivo_excel):
     df_seleccionado = df_seleccionado.apply(
         pd.to_numeric, errors='coerce').fillna(0)
 
-    print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
-    print(df_seleccionado)
+    #print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
+    #print(df_seleccionado)
 
     valores_mayores = contar_valores_mayores(df_seleccionado, 5)
 
@@ -161,22 +161,18 @@ def procesar_archivo_armonico(archivo_excel):
     print("\nPorcentaje de valores mayores a 5 por columna:")
     print(porcentaje_valores_mayores)
 
-    print("\nInformación:")
-    # Crear un diccionario con los datos de las columnas redondeados a 5 decimales
+    # Crear un diccionario con los datos de las columnas, asegurándose de convertir a tipos nativos de Python
     data = {
-        # columna: porcentaje_valores_mayores[columna].round(5)
         columna: {
-            'conteo': int(valores_mayores[columna]),  # Convertir a int
+            # Convertir a int
+            'conteo': int(valores_mayores[columna]),
             # Convertir a float
             'porcentaje': float(porcentaje_valores_mayores[columna].round(5))
         }
         for columna in df_seleccionado.columns
     }
 
-    print("\nData: ", data)
-
-    # Número de columnas
-    print("Cantidad: ", len(data))
+    # print("\nData: ", data)
 
     # Crear un objeto ArchivoInfo con la información del archivo
     ArchivoInfo.objects.create(
