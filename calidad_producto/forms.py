@@ -9,3 +9,14 @@ class ArchivoForm(forms.ModelForm):
     class Meta:
         model = Archivo
         fields = ['archivo']
+
+
+class ArchivoLoteForm(forms.Form):
+    """
+    Formulario para subir más de un archivo xls.
+    """
+    #archivos = forms.FileField(
+    #    widget=forms.ClearableFileInput(attrs={'multiple': True}),
+    #    required=True,
+    #    label='Selecciona archivos'
+    #)

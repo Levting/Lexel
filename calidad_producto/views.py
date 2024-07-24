@@ -1,6 +1,5 @@
 import pytz
 import pandas as pd
-from .forms import ArchivoForm
 from django.contrib import messages
 from .models import Archivo, ArchivoInfo
 from babel.dates import format_datetime
@@ -61,47 +60,108 @@ def vista_tendencia(request):
     return render(request, 'tendencias/tendencias.html')
 
 
-def crear_armonico(request):
-    # Si la solicitud se trata de enviar datos, es decir, crear un archivo
-    if request.method == 'POST':
-        # Crear un formulario con los datos del archivo
-        formulario = ArchivoForm(request.POST, request.FILES)
+def vista_crear_armonico(request):
+    return render(request, 'armonicos/crear_armonico.html')
 
-        # Verifica si el formulario es válido
-        if formulario.is_valid():
+
+def crear_armonico_unico(request):
+    # Si la solicitud es POST, procesar el formulario
+    if request.method == 'POST':
+
+        # Obtener el archivo de la solicitud
+        if 'archivo_unico' in request.FILES:
+
+            # Obtener el archivo de la solicitud
+            archivo_unico = request.FILES['archivo_unico']
+
+            # Crear un nuevo objeto de archivo y guardarlo en la base de datos
+            nuevo_archivo = Archivo(archivo=archivo_unico)
+
             # Guardar el archivo en la base de datos
-            nuevo_archivo = formulario.save()
+            nuevo_archivo.save()
 
             try:
+                # Guardar el archivo en la base de datos, procesa el archivo y muestra un mensaje de éxito
                 procesar_archivo_armonico(nuevo_archivo)
                 messages.success(request, 'Archivo procesado correctamente.')
                 return redirect('vista_armonicos')
 
             except (ValueError, EmptyDataError) as e:
+                # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
                 messages.error(
                     request, f'Ocurrió un error al procesar el archivo: {e}')
-                # Eliminar el archivo guardado si ocurrió un error  al procesar el archivo
                 nuevo_archivo.delete()
 
             except DatabaseError as e:
+                # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
                 messages.error(request, f'Error de base de datos: {e}')
-                # Eliminar el archivo guardado si ocurrió un error en la base de datos
                 nuevo_archivo.delete()
 
             except Exception as e:
+                # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
                 messages.error(request, f'Error inesperado: {e}')
-                nuevo_archivo.delete()  # Eliminar el archivo guardado si ocurrió un error inesperado
+                nuevo_archivo.delete()
 
         else:
-            # Mostrar un mensaje de error si el formulario no es válido
-            messages.error(request, 'Error al procesar el formulario.')
-    else:
-        # Si solo se trata de obtener datos, es decir para mostrar la página, vamos a mostrar el formulario vacío
-        # Crear un formulario vacío
-        formulario = ArchivoForm()
+            # Mostrar un mensaje de error si no se encuentra el archivo en la solicitud
+            messages.error(request, 'Por favor, seleccione un archivo .xlsx.')
 
-    # Renderizar el formulario, va aqui para el manejo de los errores.
-    return render(request, 'armonicos/crear_armonico.html', {'form': formulario})
+    # Renderizar la vista de crear armonico
+    return render(request, 'armonicos/crear_armonico.html')
+
+
+def crear_armonico_lote(request):
+
+    # Si la solicitud es POST, procesar el formulario
+    if request.method == 'POST':
+
+        # Obtener los archivos de la solicitud
+        if 'archivos_lote' in request.FILES:
+
+            # De la solicitud, obtener los archivos
+            archivos = request.FILES.getlist('archivos_lote')
+
+            # Para cada archivo en la lista de archivos
+            for archivo in archivos:
+
+                # Crear un nuevo archivo a partir del archivo actual
+                nuevo_archivo = Archivo(archivo=archivo)
+
+                # Guardar el archivo en la base de datos
+                nuevo_archivo.save()
+
+                try:
+                    # Procesar el archivo y mostrar un mensaje de éxito
+                    procesar_archivo_armonico(nuevo_archivo)
+                    messages.success(
+                        request, f'Archivo {archivo.name} procesado correctamente.')
+
+                except (ValueError, EmptyDataError) as e:
+                    # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
+                    messages.error(
+                        request, f'Ocurrió un error al procesar el archivo {archivo.name}: {e}')
+                    nuevo_archivo.delete()
+
+                except DatabaseError as e:
+                    # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
+                    messages.error(request, f'Error de base de datos: {e}')
+                    nuevo_archivo.delete()
+
+                except Exception as e:
+                    # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
+                    messages.error(
+                        request, f'Error inesperado al procesar el archivo {archivo.name}: {e}')
+                    nuevo_archivo.delete()
+            
+        # Redirigir a la página de armonicos
+        return redirect('vista_armonicos')
+
+    else:
+        # Mostrar un mensaje de error si el formulario no es válido
+        messages.error(request, 'Error al procesar el formulario.')
+
+    # Renderizar la vista de crear armonico
+    return render(request, 'armonicos/crear_armonico.html')
 
 
 def eliminar_armonico(request, archivo_id):
@@ -146,8 +206,8 @@ def procesar_archivo_armonico(archivo_excel):
     df_seleccionado = df_seleccionado.apply(
         pd.to_numeric, errors='coerce').fillna(0)
 
-    #print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
-    #print(df_seleccionado)
+    # print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
+    # print(df_seleccionado)
 
     valores_mayores = contar_valores_mayores(df_seleccionado, 5)
 
