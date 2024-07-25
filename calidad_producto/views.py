@@ -4,7 +4,7 @@ from .models import Archivo, ArchivoInfo
 from django.utils.timezone import localtime
 from babel.dates import format_datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from .lectura_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
+from .code.depuracion_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
@@ -139,8 +139,14 @@ def depuracion_armonico(archivo_excel):
             'porcentaje': float(porcentaje_valores_mayores[columna].round(5))
         }
         for columna in df_seleccionado.columns
+
     }
 
+    # Identificar columnas con más del 5% de valores mayores a 5
+    columnas_mayores_5 = {
+        columna: data[columna] for columna in data
+        if data[columna]['porcentaje'] > 5
+    }
     # print("\nData: ", data)
 
     # Crear un objeto ArchivoInfo con la información del archivo
@@ -148,6 +154,7 @@ def depuracion_armonico(archivo_excel):
         archivo=archivo_excel,
         data=data
     )
+
 
 # Tendencias
 

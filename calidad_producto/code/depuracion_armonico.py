@@ -1,12 +1,20 @@
 import pandas as pd
 
 
-def leer_archivo(file_path):
+def leer_archivo(ruta_archivo, hoja=0, encabezado=None):
     """
     Lee un archivo xlsx y devuelve un DataFrame.
+
+    Parámetros:
+    ruta_archivo (str): La ruta del archivo xlsx.
+    nombre_hoja (str o int): Nombre o índice de la hoja a leer. Por defecto es 0 (primera hoja).
+    encabezado (int o None): La fila a utilizar como encabezado (0-indexado). None para no usar encabezado.
+
+    Retorna:
+    DataFrame o None: El DataFrame leído o None si ocurre un error.
     """
     try:
-        df = pd.read_excel(file_path, header=None,
+        df = pd.read_excel(ruta_archivo, header=encabezado, sheet_name=hoja,
                            engine='openpyxl')  # Leer sin encabezado
     except FileNotFoundError:
         print("El archivo no se encontró.")
@@ -20,6 +28,14 @@ def leer_archivo(file_path):
 def seleccionar_filas_columnas(df, filas, columnas):
     """
     Selecciona el rango de filas y columnas necesarias de un DataFrame.
+
+    Parámetros:
+    df (DataFrame): El DataFrame original.
+    filas (slice): Rango de filas a seleccionar.
+    columnas (slice): Rango de columnas a seleccionar.
+
+    Retorna:
+    DataFrame: El DataFrame resultante con las filas y columnas seleccionadas.
     """
     df_seleccionado = df.iloc[filas, columnas]
     return df_seleccionado
@@ -27,7 +43,13 @@ def seleccionar_filas_columnas(df, filas, columnas):
 
 def ajustar_encabezado(df):
     """
-    Ajusta el DataFrame para usar la primera fila como encabezado de las columnas.
+    Ajusta el encabezado de un DataFrame.
+
+    Parámetros:
+    df (DataFrame): El DataFrame con los datos.
+
+    Retorna:
+    DataFrame: El DataFrame con el encabezado ajustado.
     """
     df.columns = df.iloc[0]
     df = df[1:]  # Eliminar la primera fila
