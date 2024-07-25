@@ -11,17 +11,27 @@ from pandas.errors import EmptyDataError
 
 
 def index(request):
+    """
+    Visita la página "Calidad del Producto"
+    """
     return render(request, 'calidad_producto/index.html')
 
 # Armonicos
 
 
 def vista_armonicos(request):
+    """
+    Visita la página de armonicos, obtenemos todos los datos de la base de datos con la temática de armonicos y mostramos en la vista armonicos.html
+    """
     archivos_formateados = obtener_archivos_por_categoria('armonico')
     return render(request, 'armonicos/armonicos.html', {'archivos': archivos_formateados})
 
 
 def vista_armonico_detalle(request, archivo_id):
+    """
+    Visita la página de detalle de armonicos, obtenemos el archivo seleccionado y mostramos en la vista "armonico_detalle.html"
+    """
+
     # Obtener el archivo evitando que el servidor colapse
     archivo = get_object_or_404(Archivo, id=archivo_id)
 
@@ -38,22 +48,45 @@ def vista_armonico_detalle(request, archivo_id):
 
 
 def vista_crear_armonico(request):
+    """
+    Visita la página de crear armonico, mostramos la vista "crear_armonico.html"
+    """
     return render(request, 'armonicos/crear_armonico.html')
 
 
 def crear_armonico_unico(request):
-    return crear_archivo_unico(request, 'armonico', procesar_archivo_armonico, 'vista_armonicos', 'armonicos/crear_armonico.html')
+    """
+    Crea un archivo armonico de forma única, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
+    """
+    return procesar_archivo_unico(request, 'armonico', depuracion_armonico, 'vista_armonicos')
 
 
 def crear_armonico_lote(request):
-    return procesar_archivos_lote(request, 'armonico', procesar_archivo_armonico, 'vista_armonicos')
+    """
+    Crea un archivo armonico en lote, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
+    """
+    return procesar_archivos_lote(request, 'armonico', depuracion_armonico, 'vista_armonicos')
 
 
 def eliminar_armonico(request, archivo_id):
+    """
+    Elimina un archivo armonico y redirige a la vista de armonicos.
+    """
     return eliminar_archivo(request, archivo_id, 'vista_armonicos')
 
 
-def procesar_archivo_armonico(archivo_excel):
+def depuracion_armonico(archivo_excel):
+    """
+    Depura el archivo armonico
+
+    1. Selecciona las filas y columnas necesarias. 
+    2. Ajusta el encabezado del df seleccionado.
+    3. Convierte los datos a tipo numérico y llena NaN con 0.
+    4. Cuenta los valores mayores a 5 por columna.
+    5. Calcula el porcentaje de valores mayores a 5 por columna.
+    6. Crea un objeto ArchivoInfo con la información del archivo.
+    """
+
     # Leer el archivo cargado
     df = leer_archivo(archivo_excel.archivo.path)
 
@@ -62,11 +95,10 @@ def procesar_archivo_armonico(archivo_excel):
         raise ValueError("No se pudo leer el archivo.")
 
     # print(df.to_string(index=False))
-
-    # print("DataFrame Original:")
+    # print("\nDataFrame Original:")
     # print(df)
 
-    # SELECCIONAR LAS FILAS Y COLUMNAS NECESARIAS
+    # Seleccionar las filas y columnas necesarias
     filas = slice(11, -1)
     columnas = slice(10, None)
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
@@ -74,6 +106,7 @@ def procesar_archivo_armonico(archivo_excel):
     # print("\nDataFrame Seleccionado:")
     # print(df_seleccionado)
 
+    # Ajustar el encabezado del df seleccionado
     df_seleccionado = ajustar_encabezado(df_seleccionado)
 
     # Convertir los datos a tipo numérico y llenar NaN con 0
@@ -83,19 +116,21 @@ def procesar_archivo_armonico(archivo_excel):
     # print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
     # print(df_seleccionado)
 
+    # Contar los valores mayores a 5 por columna
     valores_mayores = contar_valores_mayores(df_seleccionado, 5)
 
     # print("\nValores mayores a 5 por columna:")
     # print(valores_mayores)
 
-    total_filas = df_seleccionado.shape[0]  # Número total de filas
+    # Obtener el total de filas para calcular el porcentaje de valores mayores a 5
+    total_filas = df_seleccionado.shape[0]
     porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
         valores_mayores, total_filas)
 
     # print("\nPorcentaje de valores mayores a 5 por columna:")
     # print(porcentaje_valores_mayores)
 
-    # Crear un diccionario con los datos de las columnas, asegurándose de convertir a tipos nativos de Python
+    # Crear un diccionario con los datos de las columnas, asegurándose de convertir a tipos nativos de Python (numericos)
     data = {
         columna: {
             # Convertir a int
@@ -105,6 +140,7 @@ def procesar_archivo_armonico(archivo_excel):
         }
         for columna in df_seleccionado.columns
     }
+
     # print("\nData: ", data)
 
     # Crear un objeto ArchivoInfo con la información del archivo
@@ -113,37 +149,52 @@ def procesar_archivo_armonico(archivo_excel):
         data=data
     )
 
-    print("Archivo procesado correctamente!.")
-
-
 # Tendencias
 
+
 def vista_tendencias(request):
+    """
+    Visita la página de tendencias, obtenemos todos los datos de la base de datos con la temática de tendencias y mostramos en la vista tendencias.html
+    """
     archivos_formateados = obtener_archivos_por_categoria('tendencia')
     return render(request, 'tendencias/tendencias.html', {'archivos': archivos_formateados})
 
 
 def vista_tendencia_detalle(request, archivo_id):
-    """"""
+    """
+    Visita la página de detalle de tendencias, obtenemos el archivo seleccionado y mostramos en la vista "tendencia_detalle.html"
+    """
 
 
 def vista_crear_tendencia(request):
+    """
+    Visita la página de crear tendencia, mostramos la vista "crear_tendencia.html"
+    """
     return render(request, 'tendencias/crear_tendencia.html')
 
 
 def crear_tendencia_unico(request):
-    return crear_archivo_unico(request, 'tendencia', procesar_archivo_tendencia, 'vista_tendencias', 'tendencias/crear_tendencia.html')
+    """
+    Crea un archivo tendencia de forma única, depura el archivo tendencia y mostrando un mensaje de éxito o error en la vista de tendencias.
+    """
+    return procesar_archivo_unico(request, 'tendencia', depuracion_tendencia, 'vista_tendencias')
 
 
 def crear_tendencia_lote(request):
-    return procesar_archivos_lote(request, 'tendencia', procesar_archivo_tendencia, 'vista_tendencias')
+    """
+    Crea un archivo tendencia en lote, depura el archivo tendencia y mostrando un mensaje de éxito o error en la vista de tendencias.
+    """
+    return procesar_archivos_lote(request, 'tendencia', depuracion_tendencia, 'vista_tendencias')
 
 
 def eliminar_tendencia(request, archivo_id):
+    """
+    Elimina un archivo tendencia y redirige a la vista de tendencias.
+    """
     return eliminar_archivo(request, archivo_id, 'vista_tendencias')
 
 
-def procesar_archivo_tendencia(archivo_excel):
+def depuracion_tendencia(archivo_excel):
     print("Procesando archivo de tendencia...")
 
 
@@ -168,53 +219,58 @@ def obtener_archivos_por_categoria(categoria):
     return archivos_formateados
 
 
-def crear_archivo_unico(request, categoria, tipo_depuracion, redireccion_vista, nombre_plantilla):
+def procesar_archivo_unico(request, categoria, tipo_depuracion, redireccion_vista):
+    """
+    Procesa un archivo de forma única.
+    """
     if request.method == 'POST':
         if 'archivo_unico' in request.FILES:
-            # Obtener el archivo de la solicitud
-            archivo_unico = request.FILES['archivo_unico']
 
-            # Crear un nuevo objeto de archivo con la categoría 'armonicos' o 'tendencia'
-            nuevo_archivo = Archivo(archivo=archivo_unico, categoria=categoria)
+            # Obtener el archivo de la solicitud
+            archivo = request.FILES['archivo_unico']
+
+            # Crear un nuevo objeto a partir de la categoria, 'armonicos' o 'tendencia'
+            nuevo_archivo = Archivo(archivo=archivo, categoria=categoria)
 
             # Guardar el archivo en la base de datos
             nuevo_archivo.save()
 
             # Procesar el archivo
-            return procesar_archivo(request, nuevo_archivo, tipo_depuracion, redireccion_vista)
+            try:
+                # Procesar el archivo y mostrar un mensaje de éxito
+                tipo_depuracion(nuevo_archivo)
+                messages.success(request, 'Archivo procesado correctamente.')
+                print("\nArchivo procesado correctamente!\n")
+                return redirect(redireccion_vista)
+
+            except (ValueError, EmptyDataError) as e:
+                # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
+                messages.error(
+                    request, f'Ocurrió un error al procesar el archivo: {e}')
+                nuevo_archivo.delete()
+
+            except DatabaseError as e:
+                # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
+                messages.error(request, f'Error de base de datos: {e}')
+                nuevo_archivo.delete()
+
+            except Exception as e:
+                # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
+                messages.error(request, f'Error inesperado: {e}')
+                nuevo_archivo.delete()
+
         else:
+            # Mostrar un mensaje de error si no se seleccionó un archivo
             messages.error(request, 'Por favor, seleccione un archivo .xlsx.')
 
-    return render(request, nombre_plantilla)
-
-
-def procesar_archivo(request, nuevo_archivo, tipo_depuracion, redireccion_vista):
-    try:
-        # Guardar el archivo en la base de datos, procesa el archivo y muestra un mensaje de éxito
-        tipo_depuracion(nuevo_archivo)
-        messages.success(request, 'Archivo procesado correctamente.')
-        return redirect(redireccion_vista)
-
-    except (ValueError, EmptyDataError) as e:
-        # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
-        messages.error(
-            request, f'Ocurrió un error al procesar el archivo: {e}')
-        nuevo_archivo.delete()
-
-    except DatabaseError as e:
-        # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
-        messages.error(request, f'Error de base de datos: {e}')
-        nuevo_archivo.delete()
-
-    except Exception as e:
-        # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
-        messages.error(request, f'Error inesperado: {e}')
-        nuevo_archivo.delete()
-
-    return render(request, 'armonicos/crear_armonico.html')
+    # Renderizar la vista de crear armonico o tendencia
+    return render(request, 'armonicos/crear_armonico.html' if categoria == 'armonico' else 'tendencias/crear_tendencia.html')
 
 
 def procesar_archivos_lote(request, categoria, tipo_depuracion, redireccion_vista):
+    """
+    Procesa archivos en lote.
+    """
     if request.method == 'POST':
         if 'archivos_lote' in request.FILES:
             # Obtener los archivos de la solicitud
@@ -267,7 +323,9 @@ def procesar_archivos_lote(request, categoria, tipo_depuracion, redireccion_vist
 
 
 def eliminar_archivo(request, archivo_id, redireccion_vista):
-
+    """
+    Elimina un archivo y redirige a la vista de armonicos o tendencias.
+    """
     # Obtener el archivo evitando que el servidor colapse
     archivo = get_object_or_404(Archivo, id=archivo_id)
 
@@ -277,8 +335,11 @@ def eliminar_archivo(request, archivo_id, redireccion_vista):
         # Eliminar el archivo
         archivo.delete()
 
-        # Mostrar un mensaje de éxito
+        # Mostrar un mensaje de éxito en el frontend
         messages.success(request, 'Archivo eliminado correctamente.')
+
+        # Mostrar mensaje en el backend
+        print("\nArchivo eliminado correctamente.\n")
 
         # Redirigir a la página con el mensaje
         return redirect(redireccion_vista)
