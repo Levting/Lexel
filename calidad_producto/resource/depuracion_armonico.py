@@ -245,7 +245,52 @@ def aemc(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valo
 
 
 def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valor_porcentaje=0):
-    pass
+    """
+    Función principal para analizar un archivo de Metrel monofásico o trifásico.
+
+    Parámetros:
+        ruta_archivo (str): La ruta del archivo xlsx o xls.
+        filas (slice): Rango de filas a seleccionar. Por defecto selecciona todas las filas.
+        columnas (slice): Rango de columnas a seleccionar. Por defecto selecciona todas las columnas.
+        valor_porcentaje (int): El porcentaje mínimo para considerar un valor mayor. Por defecto es 0.
+
+    Retorna:
+        dict: Diccionario con la información general que conrresponde a los valores mayores.
+    """
+    # Leer el archivo
+    df = leer_archivo(ruta_archivo)
+
+    if df is None:
+        print("No se pudo leer el archivo.")
+        return None
+    else:
+        print("\nDF Original:")
+        print(df)
+
+        # Seleccionar las filas y columnas deseadas
+        df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
+
+        # Ajustar el encabezado
+        df_seleccionado = ajustar_encabezado(df_seleccionado)
+
+        # Convertir los datos a tipo numérico y llenar NaN con 0
+        df_seleccionado = df_seleccionado.apply(
+            pd.to_numeric, errors='coerce').fillna(0)
+
+        # Contrar valores mayores a 5 por columna
+        valores_mayores = contar_valores_mayores(
+            df_seleccionado, valor_porcentaje)
+
+        # Calcular porcentaje de valores mayores a 5 por columna
+        total_filas = df_seleccionado.shape[0]  # Número total de filas
+        porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
+            valores_mayores, total_filas)
+
+        # Obtener información general
+        informacion = obtener_datos(
+            df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje)
+
+        return informacion
 
 
 def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
@@ -260,7 +305,7 @@ def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
     Retorna:
         tuple: Una tupla con la información general y los resultados de valores mayores.
     """
-    
+
     def manejador_sonel():
         print("Analizando archivo con Sonel...")
         filas = slice(None, None)
@@ -275,8 +320,8 @@ def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
 
     def manejar_metrel():
         print("Analizando archivo con Metrel ...")
-        filas = slice(1, None)
-        columnas = slice(2, None)
+        filas = slice(None, None)
+        columnas = slice(None, None)
         return metrel(ruta_archivo, filas, columnas, valor_porcentaje)
 
     def manejador_no_soportado():

@@ -59,8 +59,8 @@ def crear_armonico_unico(request):
     """
     categoria_id = 1  # Armonico
     tipo_id = 1  # Monofásico
-    # analizador_id = 1  # Sonel
-    analizador_id = 2  # AEMC
+    analizador_id = 1  # SONEL
+    # analizador_id = 2  # AEMC
     # analizador_id = 3  # METREL
     valor_porcentaje = 5
     return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
@@ -262,7 +262,6 @@ def procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_
             for archivo in archivos:
 
                 try:
-
                     # Obtener la categoría, tipo, y analizador desde la base de datos
                     categoria = Categoria.objects.get(id=categoria_id)
                     tipo = Tipo.objects.get(id=tipo_id)
