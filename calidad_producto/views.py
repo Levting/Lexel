@@ -59,7 +59,9 @@ def crear_armonico_unico(request):
     """
     categoria_id = 1  # Armonico
     tipo_id = 1  # Monofásico
-    analizador_id = 1  # Sonel
+    # analizador_id = 1  # Sonel
+    analizador_id = 2  # AEMC
+    # analizador_id = 3  # METREL
     valor_porcentaje = 5
     return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
 
@@ -68,7 +70,11 @@ def crear_armonico_lote(request):
     """
     Crea un archivo armonico en lote, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
     """
-    return procesar_archivos_lote(request, 'armonico', depuracion_armonico, 'vista_armonicos')
+    categoria_id = 1  # Armonico
+    tipo_id = 1  # Monofásico
+    analizador_id = 1  # Sonel
+    valor_porcentaje = 5
+    return procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
 
 
 def eliminar_armonico(request, archivo_id):
@@ -101,9 +107,6 @@ def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
     # Obtener la informacion del analizador
     informacion = arm.tipo_analizador(
         ruta_archivo, analizador, valor_porcentaje)
-
-    # Mostrar la información depurada
-    print("\nInformación depurada:\n", informacion)
 
     # Actualizar la información del archivo
     nuevo_archivo.informacion = informacion
@@ -177,7 +180,9 @@ def obtener_archivos_por_categoria(categoria_id):
         {
             'id': archivo.id,
             'archivo': archivo.archivo.name.split('/')[-1],
-            'subido_el': format_datetime(localtime(archivo.subido_el), format='dd MMMM yyyy, hh:mm a', locale='es_ES')
+            'subido_el': format_datetime(localtime(archivo.subido_el), format='dd MMMM yyyy, hh:mm a', locale='es_ES'),
+            'tipo': archivo.tipo.nombre,
+            'analizador': archivo.analizador.nombre,
         }
         for archivo in archivos
     ]
@@ -197,6 +202,7 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
                 categoria = Categoria.objects.get(id=categoria_id)
                 tipo = Tipo.objects.get(id=tipo_id)
                 analizador = Analizador.objects.get(id=analizador_id)
+                print(f"Analizador: {analizador}")
 
                 # Crear un nuevo objeto Archivo
                 nuevo_archivo = Archivo(
@@ -206,10 +212,10 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
                     analizador=analizador
                 )
 
-                # Guardar el archivo en la base de datos después de procesarlo
+                # Guardar el archivo en la base de datos
                 nuevo_archivo.save()
 
-                # Procesar el archivo antes de guardar
+                # Procesar el archivo
                 tipo_depuracion(nuevo_archivo, analizador, valor_porcetaje)
 
                 # Mostrar un mensaje de éxito si el archivo se procesó correctamente
@@ -232,7 +238,7 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
             except Exception as e:
                 # Mensaje de error si ocurre un error inesperado.
                 messages.error(request, f'Error inesperado: {e}')
-                nuevo_archivo.delete()
+                
 
         else:
             # Mostrar un mensaje de error si no se seleccionó un archivo
@@ -242,27 +248,41 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
     return render(request, 'armonicos/crear_armonico.html' if categoria.id == 1 else 'tendencias/crear_tendencia.html')
 
 
-def procesar_archivos_lote(request, categoria, tipo_depuracion, redireccion_vista):
+def procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcenaje, tipo_depuracion, redireccion_vista):
     """
     Procesa archivos en lote.
     """
     if request.method == 'POST':
         if 'archivos_lote' in request.FILES:
+
             # Obtener los archivos de la solicitud
             archivos = request.FILES.getlist('archivos_lote')
 
             # Para cada archivo en la lista de archivos
             for archivo in archivos:
 
-                # Crear un nuevo archivo a partir del archivo actual
-                nuevo_archivo = Archivo(archivo=archivo, categoria=categoria)
-
-                # Guardar el archivo en la base de datos
-                nuevo_archivo.save()
-
                 try:
+
+                    # Obtener la categoría, tipo, y analizador desde la base de datos
+                    categoria = Categoria.objects.get(id=categoria_id)
+                    tipo = Tipo.objects.get(id=tipo_id)
+                    analizador = Analizador.objects.get(id=analizador_id)
+
+                    # Crear un nuevo archivo a partir del archivo actual
+                    nuevo_archivo = Archivo(
+                        archivo=archivo,
+                        categoria=categoria,
+                        tipo=tipo,
+                        analizador=analizador
+                    )
+
+                    # Guardar el archivo en la base de datos
+                    nuevo_archivo.save()
+
                     # Procesar el archivo y mostrar un mensaje de éxito
-                    tipo_depuracion(nuevo_archivo)
+                    tipo_depuracion(nuevo_archivo, analizador, valor_porcenaje)
+
+                    # Mostrar un mensaje de éxito si el archivo se procesó correctamente
                     messages.success(
                         request, f'Archivo {archivo.name} procesado correctamente.')
 
@@ -294,7 +314,7 @@ def procesar_archivos_lote(request, categoria, tipo_depuracion, redireccion_vist
         messages.error(request, 'Error al procesar el formulario.')
 
     # Renderizar la vista de crear armonico o tendencia
-    return render(request, 'armonicos/crear_armonico.html' if categoria == 'armonico' else 'tendencias/crear_tendencia.html')
+    return render(request, 'armonicos/crear_armonico.html' if categoria.id == 1 else 'tendencias/crear_tendencia.html')
 
 
 def eliminar_archivo(request, archivo_id, redireccion_vista):

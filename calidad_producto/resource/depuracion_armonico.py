@@ -260,8 +260,7 @@ def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
     Retorna:
         tuple: Una tupla con la información general y los resultados de valores mayores.
     """
-    print(f"Ruta: ", ruta_archivo)
-
+    
     def manejador_sonel():
         print("Analizando archivo con Sonel...")
         filas = slice(None, None)
@@ -270,11 +269,15 @@ def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
 
     def manejador_aemc():
         print("Analizando archivo con AEMC...")
-        return None
+        filas = slice(1, None)
+        columnas = slice(2, None)
+        return aemc(ruta_archivo, filas, columnas, valor_porcentaje)
 
     def manejar_metrel():
         print("Analizando archivo con Metrel ...")
-        return None
+        filas = slice(1, None)
+        columnas = slice(2, None)
+        return metrel(ruta_archivo, filas, columnas, valor_porcentaje)
 
     def manejador_no_soportado():
         print("Analizador no soportado.")
