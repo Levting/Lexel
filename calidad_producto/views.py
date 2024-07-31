@@ -38,24 +38,8 @@ def vista_armonico_detalle(request, archivo_id):
     # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
     nombre_archivo = archivo.archivo.url.split('/')[-1]
 
-    # Obtener la información del archivo
-
-    print("\nArchivo Obj: ", archivo)
-    print("\nArchivo Info: ", archivo.info.all())
-    print("\nArchivo Info Count: ", archivo.info.count())
-    print("\nArchivo Info First: ", archivo.info.first())
-
-    archivo_info_obj = archivo.info.first()
-    print("\nArchivo Info Obj: ", archivo_info_obj.data)
-
-    archivo_info = archivo_info_obj.data if archivo_info_obj else {}
-    print("\nArchivo Info: ", archivo_info)
-
-    # Obtener los datos del archivo seleccionado y filtrar los que tienen un porcentaje mayor al 5%
-    columnas_mayores_5 = {
-        columna: archivo_info[columna] for columna in archivo_info
-        if archivo_info[columna]['porcentaje'] > 5
-    }
+    # Obtener la informacion de archivo
+    archivo_info = archivo.informacion
 
     # print("\nInformación del archivo seleccionado:\n", archivo_info)
 
@@ -120,6 +104,12 @@ def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
 
     # Mostrar la información depurada
     print("\nInformación depurada:\n", informacion)
+
+    # Actualizar la información del archivo
+    nuevo_archivo.informacion = informacion
+
+    # Guardar los cambios en la base de datos
+    nuevo_archivo.save()
 
 # ---------- TENDENCIA ----------
 
