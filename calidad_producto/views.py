@@ -1,10 +1,10 @@
 import pandas as pd
 from django.contrib import messages
-from .models import Archivo, ArchivoInfo
+from .models import Archivo, Categoria, Tipo, Analizador
 from django.utils.timezone import localtime
 from babel.dates import format_datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from .code.depuracion_armonico import leer_archivo, seleccionar_filas_columnas, ajustar_encabezado, contar_valores_mayores, calcular_porcentaje_valores_mayores
+from .resource import depuracion_armonico as arm
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
@@ -16,14 +16,14 @@ def index(request):
     """
     return render(request, 'calidad_producto/index.html')
 
-# Armonicos
+# ---------- ARMÓNICOS ----------
 
 
 def vista_armonicos(request):
     """
-    Visita la página de armonicos, obtenemos todos los datos de la base de datos con la temática de armonicos y mostramos en la vista armonicos.html
+    Visita la página de armonicos
     """
-    archivos_formateados = obtener_archivos_por_categoria('armonico')
+    archivos_formateados = obtener_archivos_por_categoria(1)
     return render(request, 'armonicos/armonicos.html', {'archivos': archivos_formateados})
 
 
@@ -39,8 +39,23 @@ def vista_armonico_detalle(request, archivo_id):
     nombre_archivo = archivo.archivo.url.split('/')[-1]
 
     # Obtener la información del archivo
+
+    print("\nArchivo Obj: ", archivo)
+    print("\nArchivo Info: ", archivo.info.all())
+    print("\nArchivo Info Count: ", archivo.info.count())
+    print("\nArchivo Info First: ", archivo.info.first())
+
     archivo_info_obj = archivo.info.first()
+    print("\nArchivo Info Obj: ", archivo_info_obj.data)
+
     archivo_info = archivo_info_obj.data if archivo_info_obj else {}
+    print("\nArchivo Info: ", archivo_info)
+
+    # Obtener los datos del archivo seleccionado y filtrar los que tienen un porcentaje mayor al 5%
+    columnas_mayores_5 = {
+        columna: archivo_info[columna] for columna in archivo_info
+        if archivo_info[columna]['porcentaje'] > 5
+    }
 
     # print("\nInformación del archivo seleccionado:\n", archivo_info)
 
@@ -58,7 +73,11 @@ def crear_armonico_unico(request):
     """
     Crea un archivo armonico de forma única, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
     """
-    return procesar_archivo_unico(request, 'armonico', depuracion_armonico, 'vista_armonicos')
+    categoria_id = 1  # Armonico
+    tipo_id = 1  # Monofásico
+    analizador_id = 1  # Sonel
+    valor_porcentaje = 5
+    return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
 
 
 def crear_armonico_lote(request):
@@ -75,95 +94,41 @@ def eliminar_armonico(request, archivo_id):
     return eliminar_archivo(request, archivo_id, 'vista_armonicos')
 
 
-def depuracion_armonico(archivo_excel):
+def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
     """
-    Depura el archivo armonico
+    Depura un archivo armonico.
 
-    1. Selecciona las filas y columnas necesarias. 
-    2. Ajusta el encabezado del df seleccionado.
-    3. Convierte los datos a tipo numérico y llena NaN con 0.
-    4. Cuenta los valores mayores a 5 por columna.
-    5. Calcula el porcentaje de valores mayores a 5 por columna.
-    6. Crea un objeto ArchivoInfo con la información del archivo.
+    Parámetros:
+        nuevo_archivo: El archivo a depurar.
+        analizador: El analizador a utilizar.
+        valor_porcentaje: El valor del porcentaje a utilizar.
+
+    Retorna:
+        La información depurada del archivo.
+
     """
 
-    # Leer el archivo cargado
-    df = leer_archivo(archivo_excel.archivo.path)
+    # Obtener la ruta del archivo
+    ruta_archivo = nuevo_archivo.archivo.path
 
-    # Controlamos la lectura del archivo, para que sea correcta.
-    if df is None:
-        raise ValueError("No se pudo leer el archivo.")
+    # Obtener el nombre del analizador
+    analizador = analizador.nombre
 
-    # print(df.to_string(index=False))
-    # print("\nDataFrame Original:")
-    # print(df)
+    # Obtener la informacion del analizador
+    informacion = arm.tipo_analizador(
+        ruta_archivo, analizador, valor_porcentaje)
 
-    # Seleccionar las filas y columnas necesarias
-    filas = slice(11, -1)
-    columnas = slice(10, None)
-    df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
+    # Mostrar la información depurada
+    print("\nInformación depurada:\n", informacion)
 
-    # print("\nDataFrame Seleccionado:")
-    # print(df_seleccionado)
-
-    # Ajustar el encabezado del df seleccionado
-    df_seleccionado = ajustar_encabezado(df_seleccionado)
-
-    # Convertir los datos a tipo numérico y llenar NaN con 0
-    df_seleccionado = df_seleccionado.apply(
-        pd.to_numeric, errors='coerce').fillna(0)
-
-    # print("\nDataFrame Seleccionado con Encabezado Ajustado sin índices:")
-    # print(df_seleccionado)
-
-    # Contar los valores mayores a 5 por columna
-    valores_mayores = contar_valores_mayores(df_seleccionado, 5)
-
-    # print("\nValores mayores a 5 por columna:")
-    # print(valores_mayores)
-
-    # Obtener el total de filas para calcular el porcentaje de valores mayores a 5
-    total_filas = df_seleccionado.shape[0]
-    porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
-        valores_mayores, total_filas)
-
-    # print("\nPorcentaje de valores mayores a 5 por columna:")
-    # print(porcentaje_valores_mayores)
-
-    # Crear un diccionario con los datos de las columnas, asegurándose de convertir a tipos nativos de Python (numericos)
-    data = {
-        columna: {
-            # Convertir a int
-            'conteo': int(valores_mayores[columna]),
-            # Convertir a float
-            'porcentaje': float(porcentaje_valores_mayores[columna].round(5))
-        }
-        for columna in df_seleccionado.columns
-
-    }
-
-    # Identificar columnas con más del 5% de valores mayores a 5
-    columnas_mayores_5 = {
-        columna: data[columna] for columna in data
-        if data[columna]['porcentaje'] > 5
-    }
-    # print("\nData: ", data)
-
-    # Crear un objeto ArchivoInfo con la información del archivo
-    ArchivoInfo.objects.create(
-        archivo=archivo_excel,
-        data=data
-    )
-
-
-# Tendencias
+# ---------- TENDENCIA ----------
 
 
 def vista_tendencias(request):
     """
     Visita la página de tendencias, obtenemos todos los datos de la base de datos con la temática de tendencias y mostramos en la vista tendencias.html
     """
-    archivos_formateados = obtener_archivos_por_categoria('tendencia')
+    archivos_formateados = obtener_archivos_por_categoria(2)
     return render(request, 'tendencias/tendencias.html', {'archivos': archivos_formateados})
 
 
@@ -206,10 +171,13 @@ def depuracion_tendencia(archivo_excel):
 
 
 # --- METODOS ---
-def obtener_archivos_por_categoria(categoria):
+def obtener_archivos_por_categoria(categoria_id):
     """
     Obtiene y formatea los archivos de una categoría específica.
     """
+
+    # Obtener categoria de la base de datos
+    categoria = Categoria.objects.get(id=categoria_id)
 
     # Obtener todos los archivos de categoria "armonico" o "tendencia" ordenado ascendentemente por la fecha de subida
     archivos = Archivo.objects.filter(
@@ -226,43 +194,53 @@ def obtener_archivos_por_categoria(categoria):
     return archivos_formateados
 
 
-def procesar_archivo_unico(request, categoria, tipo_depuracion, redireccion_vista):
-    """
-    Procesa un archivo de forma única.
-    """
+def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcetaje, tipo_depuracion, redireccion_vista):
+
     if request.method == 'POST':
         if 'archivo_unico' in request.FILES:
 
             # Obtener el archivo de la solicitud
             archivo = request.FILES['archivo_unico']
 
-            # Crear un nuevo objeto a partir de la categoria, 'armonicos' o 'tendencia'
-            nuevo_archivo = Archivo(archivo=archivo, categoria=categoria)
-
-            # Guardar el archivo en la base de datos
-            nuevo_archivo.save()
-
-            # Procesar el archivo
             try:
-                # Procesar el archivo y mostrar un mensaje de éxito
-                tipo_depuracion(nuevo_archivo)
+                # Obtener la categoría, tipo y analizador desde la base de datos
+                categoria = Categoria.objects.get(id=categoria_id)
+                tipo = Tipo.objects.get(id=tipo_id)
+                analizador = Analizador.objects.get(id=analizador_id)
+
+                # Crear un nuevo objeto Archivo
+                nuevo_archivo = Archivo(
+                    archivo=archivo,
+                    categoria=categoria,
+                    tipo=tipo,
+                    analizador=analizador
+                )
+
+                # Guardar el archivo en la base de datos después de procesarlo
+                nuevo_archivo.save()
+
+                # Procesar el archivo antes de guardar
+                tipo_depuracion(nuevo_archivo, analizador, valor_porcetaje)
+
+                # Mostrar un mensaje de éxito si el archivo se procesó correctamente
                 messages.success(request, 'Archivo procesado correctamente.')
-                print("\nArchivo procesado correctamente!\n")
+
+                # Redirigir a la página de armonicos o tendencias
                 return redirect(redireccion_vista)
 
             except (ValueError, EmptyDataError) as e:
-                # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
+                # Mensaje de error si ocurre un error al procesar el archivo.
                 messages.error(
                     request, f'Ocurrió un error al procesar el archivo: {e}')
                 nuevo_archivo.delete()
 
             except DatabaseError as e:
-                # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
+                # Mensaje de error si ocurre un error en la base.
                 messages.error(request, f'Error de base de datos: {e}')
                 nuevo_archivo.delete()
 
             except Exception as e:
-                # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
+                # Mensaje de error si ocurre un error inesperado.
                 messages.error(request, f'Error inesperado: {e}')
                 nuevo_archivo.delete()
 
@@ -271,7 +249,7 @@ def procesar_archivo_unico(request, categoria, tipo_depuracion, redireccion_vist
             messages.error(request, 'Por favor, seleccione un archivo .xlsx.')
 
     # Renderizar la vista de crear armonico o tendencia
-    return render(request, 'armonicos/crear_armonico.html' if categoria == 'armonico' else 'tendencias/crear_tendencia.html')
+    return render(request, 'armonicos/crear_armonico.html' if categoria.id == 1 else 'tendencias/crear_tendencia.html')
 
 
 def procesar_archivos_lote(request, categoria, tipo_depuracion, redireccion_vista):
