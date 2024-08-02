@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from django.contrib import messages
 from .models import Archivo, Categoria, Tipo, Analizador
@@ -59,10 +60,14 @@ def crear_armonico_unico(request):
     Crea un archivo armonico de forma única, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
     """
     categoria_id = 1  # Armonico
-    tipo_id = 2  # Monofásico
-    analizador_id = 3  # SONEL
+
+    tipo_id = 1  # Monofásico
+    # tipo_id = 2  # Trifásico
+
+    analizador_id = 1  # SONEL
     # analizador_id = 2  # AEMC
     # analizador_id = 3  # METREL
+
     valor_porcentaje = 5
     return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
 
@@ -72,8 +77,14 @@ def crear_armonico_lote(request):
     Crea un archivo armonico en lote, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
     """
     categoria_id = 1  # Armonico
+
     tipo_id = 1  # Monofásico
-    analizador_id = 1  # Sonel
+    # tipo_id = 2  # Trifásico
+
+    analizador_id = 1  # SONEL
+    # analizador_id = 2  # AEMC
+    # analizador_id = 3  # METREL
+
     valor_porcentaje = 5
     return procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
 
@@ -108,7 +119,7 @@ def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
     # Obtener la informacion del analizador
     informacion = arm.tipo_analizador(
         analizador, ruta_archivo, valor_porcentaje)
-    
+
     # Actualizar la información del archivo
     nuevo_archivo.informacion = informacion
 
@@ -211,48 +222,51 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
                     tipo=tipo,
                     analizador=analizador
                 )
-                print(f"Nuevo Archivo Unico: {nuevo_archivo}")
 
                 # Guardar el archivo en la base de datos
                 nuevo_archivo.save()
 
-                # Procesar el archivo
-                tipo_depuracion(nuevo_archivo, analizador, valor_porcetaje)
+                try:
+                    # Procesar el archivo
+                    tipo_depuracion(nuevo_archivo, analizador, valor_porcetaje)
 
-                # Mostrar un mensaje de éxito si el archivo se procesó correctamente
-                messages.success(request, 'Archivo procesado correctamente.')
+                    # Si el procesamiento es exitoso, mostrar un mensaje de éxito
+                    messages.success(
+                        request, 'Archivo procesado correctamente.')
 
-                # Redirigir a la página de armonicos o tendencias
-                return redirect(redireccion_vista)
+                    # Redirigir a la página de armonicos o tendencias
+                    return redirect(redireccion_vista)
 
-            except (ValueError, EmptyDataError) as e:
-                # Mensaje de error si ocurre un error al procesar el archivo.
-                messages.error(
-                    request, f'Ocurrió un error al procesar el archivo: {e}')
-                nuevo_archivo.delete()
+                except (ValueError, EmptyDataError) as e:
+                    # Si ocurre un error al procesar el archivo, eliminar el archivo guardado
+                    eliminar_archivo_referencia(nuevo_archivo)
+                    messages.error(
+                        request, f'Ocurrió un error al procesar el archivo: {e}')
+
+                except Exception as e:
+                    # Manejar cualquier otra excepción y eliminar el archivo guardado
+                    eliminar_archivo_referencia(nuevo_archivo)
+                    messages.error(
+                        request, f'Error inesperado durante la depuración: {e}')
 
             except DatabaseError as e:
-                # Mensaje de error si ocurre un error en la base.
+                # Si ocurre un error de base de datos antes de la depuración, no es necesario eliminar nada
                 messages.error(request, f'Error de base de datos: {e}')
-                nuevo_archivo.delete()
-
-            except Exception as e:
-                # Mensaje de error si ocurre un error inesperado.
-                messages.error(request, f'Error inesperado: {e}')
-                
 
         else:
             # Mostrar un mensaje de error si no se seleccionó un archivo
-            messages.error(request, 'Por favor, seleccione un archivo .xlsx.')
+            messages.error(request, 'Por favor, seleccione un archivo .xlsx o .xls.')
+
+    else:
+        # Mostrar un mensaje de error si el formulario no es válido
+        messages.error(request, 'Error al procesar el formulario.')
 
     # Renderizar la vista de crear armonico o tendencia
     return render(request, 'armonicos/crear_armonico.html' if categoria.id == 1 else 'tendencias/crear_tendencia.html')
 
 
 def procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcenaje, tipo_depuracion, redireccion_vista):
-    """
-    Procesa archivos en lote.
-    """
+
     if request.method == 'POST':
         if 'archivos_lote' in request.FILES:
 
@@ -279,36 +293,37 @@ def procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_
                     # Guardar el archivo en la base de datos
                     nuevo_archivo.save()
 
-                    # Procesar el archivo y mostrar un mensaje de éxito
-                    tipo_depuracion(nuevo_archivo, analizador, valor_porcenaje)
+                    try:
 
-                    # Mostrar un mensaje de éxito si el archivo se procesó correctamente
-                    messages.success(
-                        request, f'Archivo {archivo.name} procesado correctamente.')
+                        # Procesar el archivo y mostrar un mensaje de éxito
+                        tipo_depuracion(
+                            nuevo_archivo, analizador, valor_porcenaje)
 
-                except (ValueError, EmptyDataError) as e:
-                    # Mostrar un mensaje de error si ocurre un error al procesar el archivo eliminando el archivo de la base de datos
-                    messages.error(
-                        request, f'Ocurrió un error al procesar el archivo {archivo.name}: {e}')
-                    nuevo_archivo.delete()
+                        # Mostrar un mensaje de éxito si el archivo se procesó correctamente
+                        messages.success(
+                            request, f'Archivo {archivo.name} procesado correctamente.')
+
+                    except (ValueError, EmptyDataError) as e:
+                        # Si ocurre un error al procesar el archivo, eliminar el archivo guardado
+                        eliminar_archivo_referencia(nuevo_archivo)
+                        messages.error(
+                            request, f'Ocurrió un error al procesar el archivo {archivo.name}: {e}')
+
+                    except Exception as e:
+                        # Manejar cualquier otra excepción y eliminar el archivo guardado
+                        eliminar_archivo_referencia(nuevo_archivo)
+                        messages.error(
+                            request, f'Error inesperado al procesar el archivo {archivo.name}: {e}')
 
                 except DatabaseError as e:
-                    # Mostrar un mensaje de error si ocurre un error en la base de datos eliminando el archivo de la base de datos
+                    # Si ocurre un error de base de datos antes de la depuración, no es necesario eliminar nada
                     messages.error(request, f'Error de base de datos: {e}')
-                    nuevo_archivo.delete()
-
-                except Exception as e:
-                    # Mostrar un mensaje de error si ocurre un error inesperado eliminando el archivo de la base de datos
-                    messages.error(
-                        request, f'Error inesperado al procesar el archivo {archivo.name}: {e}')
-                    nuevo_archivo.delete()
 
             # Redirigir a la página de armonicos o tendencias
             return redirect(redireccion_vista)
         else:
             # Mostrar un mensaje de error si no se seleccionaron archivos
-            messages.error(
-                request, 'Por favor, seleccione archivos para cargar.')
+            messages.error(request, 'Por favor, seleccione un archivo .xlsx o .xls.')
     else:
         # Mostrar un mensaje de error si el formulario no es válido
         messages.error(request, 'Error al procesar el formulario.')
@@ -328,7 +343,7 @@ def eliminar_archivo(request, archivo_id, redireccion_vista):
     if request.method == 'POST':
 
         # Eliminar el archivo
-        archivo.delete()
+        eliminar_archivo_referencia(archivo)
 
         # Mostrar un mensaje de éxito en el frontend
         messages.success(request, 'Archivo eliminado correctamente.')
@@ -338,3 +353,19 @@ def eliminar_archivo(request, archivo_id, redireccion_vista):
 
         # Redirigir a la página con el mensaje
         return redirect(redireccion_vista)
+
+
+def eliminar_archivo_referencia(nuevo_archivo):
+    # Obtener la ruta del archivo
+    ruta_archivo = nuevo_archivo.archivo.path
+
+    # Eliminar el archivo del servidor
+    nuevo_archivo.delete()
+
+    # Verificar si el archivo existe en el sistema de archivos
+    if os.path.exists(ruta_archivo):
+        # Eliminar el archivo del sistema de archivos
+        os.remove(ruta_archivo)
+
+        # Mostrar mensaje en el backend
+        print("\nArchivo eliminado correctamente.\n")
