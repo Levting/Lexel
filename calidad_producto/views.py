@@ -5,6 +5,7 @@ from django.utils.timezone import localtime
 from babel.dates import format_datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from .resource import depuracion_armonico as arm
+from .resource import depuracion_tendencia as ten
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
@@ -58,8 +59,8 @@ def crear_armonico_unico(request):
     Crea un archivo armonico de forma única, depura el archivo armonico y mostrando un mensaje de éxito o error en la vista de armonicos.
     """
     categoria_id = 1  # Armonico
-    tipo_id = 1  # Monofásico
-    analizador_id = 1  # SONEL
+    tipo_id = 2  # Monofásico
+    analizador_id = 3  # SONEL
     # analizador_id = 2  # AEMC
     # analizador_id = 3  # METREL
     valor_porcentaje = 5
@@ -106,8 +107,8 @@ def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
 
     # Obtener la informacion del analizador
     informacion = arm.tipo_analizador(
-        ruta_archivo, analizador, valor_porcentaje)
-
+        analizador, ruta_archivo, valor_porcentaje)
+    
     # Actualizar la información del archivo
     nuevo_archivo.informacion = informacion
 
@@ -202,7 +203,6 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
                 categoria = Categoria.objects.get(id=categoria_id)
                 tipo = Tipo.objects.get(id=tipo_id)
                 analizador = Analizador.objects.get(id=analizador_id)
-                print(f"Analizador: {analizador}")
 
                 # Crear un nuevo objeto Archivo
                 nuevo_archivo = Archivo(
@@ -211,6 +211,7 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
                     tipo=tipo,
                     analizador=analizador
                 )
+                print(f"Nuevo Archivo Unico: {nuevo_archivo}")
 
                 # Guardar el archivo en la base de datos
                 nuevo_archivo.save()

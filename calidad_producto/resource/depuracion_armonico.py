@@ -64,7 +64,7 @@ def ajustar_encabezado(df):
     return df
 
 
-def normalizar_encabezados(df):
+def normalizar_encabezados_sonel(df):
     """
     Normaliza los encabezados de un DataFrame eliminando sufijos específicos, reemplazando 'instant' por 'inst',
     y eliminando el contenido dentro de los corchetes al final de los nombres de las columnas.
@@ -120,7 +120,7 @@ def calcular_porcentaje_valores_mayores(valores_mayores, total_filas):
     return porcentaje_valores_mayores
 
 
-def obtener_datos(df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje):
+def obtener_informacion_mayor(df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje):
     """
     Obtiene un conjunto de datos de información general con valores mayores a un porcentaje específico.
 
@@ -131,7 +131,7 @@ def obtener_datos(df_seleccionado, valores_mayores, porcentaje_valores_mayores, 
         valor_porcentaje (int): El porcentaje mínimo para considerar un valor mayor, en este caso 5.
 
     Retorna:    
-        dict: Un diccionario con la información general de columnas con valores mayores al porcentaje especificado.
+        informacion (dict): Un diccionario con la información general de columnas con valores mayores al porcentaje especificado.
     """
 
     informacion = {
@@ -142,6 +142,33 @@ def obtener_datos(df_seleccionado, valores_mayores, porcentaje_valores_mayores, 
         for columna in df_seleccionado.columns
         if porcentaje_valores_mayores[columna] > valor_porcentaje
     }
+    return informacion
+
+
+def obtener_informacion(df, valor_porcentaje):
+    """
+    Extrae la información relevante del DataFrame procesado.
+
+    Parámetros:
+        df (DataFrame): El DataFrame procesado.
+        valores_columna (dict): Diccionario con los nombres de las columnas.
+
+    Retorna:
+        informacion (dict): Un diccionario con la información extraída.
+    """
+
+    # Contar valores mayores a 5 por columna
+    valores_mayores = contar_valores_mayores(
+        df, valor_porcentaje)
+
+    # Calcular porcentaje de valores mayores a 5 por columna
+    total_filas = df.shape[0]  # Número total de filas
+    porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
+        valores_mayores, total_filas)
+
+    informacion = obtener_informacion_mayor(
+        df, valores_mayores, porcentaje_valores_mayores, valor_porcentaje)
+
     return informacion
 
 
@@ -159,44 +186,43 @@ def sonel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), val
         dict, dict: Dos diccionarios con la información general y los resultados de valores mayores.
     """
 
+    # Leer el archivo
     df = leer_archivo(ruta_archivo)
 
+    # Si el dataframe es None, mostrar un mensaje de error y salir
     if df is None:
         print("No se pudo leer el archivo.")
+        return None
 
-    else:
-        # Seleccionar las filas y columnas deseadas
-        df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
+    # Procesamiento del DataFrame
+    print("\nDF")
+    print(df)
 
-        # Ajustar encabezado del df
-        df_seleccionado = ajustar_encabezado(df_seleccionado)
+    # Seleccionar las filas y columnas deseadas
+    df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
-        # Convertir los datos a tipo numérico y llenar NaN con 0
-        df_seleccionado = df_seleccionado.apply(
-            pd.to_numeric, errors='coerce').fillna(0)
+    # Ajustar el encabezado del DataFrame
+    df_seleccionado = ajustar_encabezado(df_seleccionado)
 
-        # Normalizar encabezados
-        df_seleccionado = normalizar_encabezados(df_seleccionado)
+    # Normalizar enbacezados SONEL
+    df_seleccionado = normalizar_encabezados_sonel(df_seleccionado)
 
-        # Contar valores mayores a 5 por columna
-        valores_mayores = contar_valores_mayores(
-            df_seleccionado, valor_porcentaje)
+    # Convertir los datos a tipo numérico y llenar NaN con 0
+    df_seleccionado = df_seleccionado.apply(
+        pd.to_numeric, errors='coerce').fillna(0)
 
-        # Calcular porcentaje de valores mayores a 5 por columna
-        total_filas = df_seleccionado.shape[0]  # Número total de filas
-        porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
-            valores_mayores, total_filas)
+    print("\nDF Resultante")
+    print(df_seleccionado)
 
-        # Obtener información general y resultados de valores mayores a 5
-        informacion = obtener_datos(
-            df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje)
+    # Obtener informacion procesada
+    informacion = obtener_informacion(df_seleccionado, valor_porcentaje)
 
-        return informacion
+    return informacion
 
 
 def aemc(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valor_porcentaje=0):
     """
-    Función principal para analizar un archivo de AEMC monofásico.
+    Función principal para analizar un archivo de AEMC monofásico o trifásico.
 
     Parámetros:
         ruta_archivo (str): La ruta del archivo xlsx o xls.
@@ -208,40 +234,39 @@ def aemc(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valo
         dict: Diccionario con la información general que conrresponde a los valores mayores.
     """
 
+    # Leer el archivo
     df = leer_archivo(ruta_archivo)
+
+    # Si el dataframe es None, mostrar un mensaje de error y salir
     if df is None:
         print("No se pudo leer el archivo.")
+        return None
 
-    else:
+    # Procesamiento del DataFrame
+    print("\nDF")
+    print(df)
 
-        # Seleccionar las filas y columnas deseadas
-        df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
+    # Seleccionar las filas y columnas deseadas
+    df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
-        # Ajustar encabezado del df
-        df_seleccionado = ajustar_encabezado(df_seleccionado)
+    # Ajustar el encabezado del DataFrame
+    df_seleccionado = ajustar_encabezado(df_seleccionado)
 
-        # Convertir los datos a tipo numérico y llenar NaN con 0
-        df_seleccionado = df_seleccionado.apply(
-            pd.to_numeric, errors='coerce').fillna(0)
+    # Convertir los datos a tipo numérico y llenar NaN con 0
+    df_seleccionado = df_seleccionado.apply(
+        pd.to_numeric, errors='coerce').fillna(0)
 
-        # Eliminar la primera fila y resetear los índices
-        df_seleccionado = df_seleccionado.iloc[1:]
-        df_seleccionado.reset_index(drop=True, inplace=True)
+    # Eliminar la primera fila y resetear los índices
+    df_seleccionado = df_seleccionado.iloc[1:]
+    df_seleccionado.reset_index(drop=True, inplace=True)
 
-        # Contar valores mayores a 5 por columna
-        valores_mayores = contar_valores_mayores(
-            df_seleccionado, valor_porcentaje)
+    print("\nDataFrame Resultante")
+    print(df_seleccionado)
 
-        # Calcular porcentaje de valores mayores a 5 por columna
-        total_filas = df_seleccionado.shape[0]  # Número total de filas
-        porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
-            valores_mayores, total_filas)
+    # Obtener informacion procesada
+    informacion = obtener_informacion(df_seleccionado, valor_porcentaje)
 
-        # Obtener información general de los valores mayores a 5
-        informacion = obtener_datos(
-            df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje)
-
-        return informacion
+    return informacion
 
 
 def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valor_porcentaje=0):
@@ -257,49 +282,45 @@ def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), va
     Retorna:
         dict: Diccionario con la información general que conrresponde a los valores mayores.
     """
+
     # Leer el archivo
     df = leer_archivo(ruta_archivo)
 
+    # Si el dataframe es None, mostrar un mensaje de error y salir
     if df is None:
         print("No se pudo leer el archivo.")
         return None
-    else:
-        print("\nDF Original:")
-        print(df)
 
-        # Seleccionar las filas y columnas deseadas
-        df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
+    # Procesamiento del DataFrame
+    print("\nDF")
+    print(df)
 
-        # Ajustar el encabezado
-        df_seleccionado = ajustar_encabezado(df_seleccionado)
+    # Seleccionar las filas y columnas deseadas
+    df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
-        # Convertir los datos a tipo numérico y llenar NaN con 0
-        df_seleccionado = df_seleccionado.apply(
-            pd.to_numeric, errors='coerce').fillna(0)
+    # Ajustar el encabezado del DataFrame
+    df_seleccionado = ajustar_encabezado(df_seleccionado)
 
-        # Contrar valores mayores a 5 por columna
-        valores_mayores = contar_valores_mayores(
-            df_seleccionado, valor_porcentaje)
+    # Convertir los datos a tipo numérico y llenar NaN con 0
+    df_seleccionado = df_seleccionado.apply(
+        pd.to_numeric, errors='coerce').fillna(0)
 
-        # Calcular porcentaje de valores mayores a 5 por columna
-        total_filas = df_seleccionado.shape[0]  # Número total de filas
-        porcentaje_valores_mayores = calcular_porcentaje_valores_mayores(
-            valores_mayores, total_filas)
+    print("\nDF Resultante")
+    print(df_seleccionado)
 
-        # Obtener información general
-        informacion = obtener_datos(
-            df_seleccionado, valores_mayores, porcentaje_valores_mayores, valor_porcentaje)
+    # Obtener informacion procesada
+    informacion = obtener_informacion(df_seleccionado, valor_porcentaje)
 
-        return informacion
+    return informacion
 
 
-def tipo_analizador(ruta_archivo, analizador, valor_porcentaje):
+def tipo_analizador(analizador, ruta_archivo, valor_porcentaje):
     """
     Función que selecciona el tipo de analizador a utilizar.
 
     Parámetros:
-        ruta_archivo (str): La ruta del archivo xlsx o xls.
         analizador (str): El tipo de analizador a utilizar.
+        ruta_archivo (str): La ruta del archivo xlsx o xls.
         valor_porcentaje (int): El porcentaje mínimo para considerar un valor mayor.
 
     Retorna:
