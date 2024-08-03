@@ -1,5 +1,5 @@
 import pandas as pd
-
+from calidad_producto.models import Analizador
 
 def leer_archivo(ruta_archivo, hoja=0, encabezado=None):
     """
@@ -426,6 +426,25 @@ def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), va
     return informacion
 
 
+def obtener_valores_columna(analizador):
+    """
+    Obtiene los valores de columna del analizador desde la base de datos.
+    """
+    analizador_obj = Analizador.objects.get(nombre=analizador)
+    return {
+        'voltaje_a': analizador_obj.voltaje_a,
+        'voltaje_b': analizador_obj.voltaje_b,
+        'voltaje_c': analizador_obj.voltaje_c,
+        'flicker_a': analizador_obj.flicker_a,
+        'flicker_b': analizador_obj.flicker_b,
+        'flicker_c': analizador_obj.flicker_c,
+        'vthd_a': analizador_obj.vthd_a,
+        'vthd_b': analizador_obj.vthd_b,
+        'vthd_c': analizador_obj.vthd_c,
+        'desbalance': analizador_obj.desbalance
+    }
+
+
 def tipo_analizador(analizador, ruta_archivo):
     """
     Función que selecciona el tipo de analizador a utilizar.
@@ -443,37 +462,10 @@ def tipo_analizador(analizador, ruta_archivo):
         filas = slice(None, None)
         columnas = slice(2, None)
 
-        # Valores de la columna de fases de voltaje
-        voltaje_a = 'U L1 avg'
-        voltaje_b = 'U L2 avg'
-        voltaje_c = 'U L3 avg'
+        # Obtener los valores de las columnas del analizador
+        valores_columna = obtener_valores_columna(analizador)
 
-        # Valores de la columna de fases de flicker
-        flicker_a = 'Pst L1 inst'
-        flicker_b = 'Pst L2 inst'
-        flicker_c = 'Pst L3 inst'
-
-        # Valores de la columna de fases de VTHD
-        vthd_a = 'THD U L1 avg'
-        vthd_b = 'THD U L2 avg'
-        vthd_c = 'THD U L3 avg'
-
-        # Valores de la columna de desbalance
-        desbalance = 'U2/U1 Σ avg'
-
-        # Definir un diccionario con los valores de las columnas
-        valores_columna = {
-            'voltaje_a': voltaje_a,
-            'voltaje_b': voltaje_b,
-            'voltaje_c': voltaje_c,
-            'flicker_a': flicker_a,
-            'flicker_b': flicker_b,
-            'flicker_c': flicker_c,
-            'vthd_a': vthd_a,
-            'vthd_b': vthd_b,
-            'vthd_c': vthd_c,
-            'desbalance': desbalance
-        }
+        print(f"Valores columna: {valores_columna}")
 
         # Obtener la información
         return sonel(ruta_archivo, filas, columnas, valores_columna)
@@ -483,37 +475,8 @@ def tipo_analizador(analizador, ruta_archivo):
         filas = slice(1, None)
         columnas = slice(2, None)
 
-        # Valores de la columna de fases de voltaje
-        voltaje_a = 'V1-N rms'
-        voltaje_b = 'V2-N rms'
-        voltaje_c = 'V3-N rms'
-
-        # Valores de la columna de fases de flicker
-        flicker_a = 'Pst1'
-        flicker_b = 'Pst2'
-        flicker_c = 'Pst3'
-
-        # Valores de la columna de fases de VTHD
-        vthd_a = 'V1-N THDr'
-        vthd_b = 'V2-N THDr'
-        vthd_c = 'V3-N THDr'
-
-        # Valores de la columna de desbalance
-        desbalance = 'Vφ-φ unb'  # Vφ-φ unb (IEEE 112)
-
-        # Definir un diccionario con los valores de las columnas
-        valores_columna = {
-            'voltaje_a': voltaje_a,
-            'voltaje_b': voltaje_b,
-            'voltaje_c': voltaje_c,
-            'flicker_a': flicker_a,
-            'flicker_b': flicker_b,
-            'flicker_c': flicker_c,
-            'vthd_a': vthd_a,
-            'vthd_b': vthd_b,
-            'vthd_c': vthd_c,
-            'desbalance': desbalance
-        }
+        # Obtener los valores de las columnas del analizador
+        valores_columna = obtener_valores_columna(analizador)
 
         # Obtener la información
         return aemc(ruta_archivo, filas, columnas, valores_columna)
@@ -523,37 +486,8 @@ def tipo_analizador(analizador, ruta_archivo):
         filas = slice(None, None)
         columnas = slice(None, None)
 
-        # Valores de la columna de fases de voltaje
-        voltaje_a = 'U1(Med)'  # U1(Med) [V]
-        voltaje_b = 'U2(Med)'  # U2(Med) [V]
-        voltaje_c = 'U3(Med)'  # U3(Med) [V]
-
-        # Valores de la columna de fases de flicker
-        flicker_a = 'Pst1(Med)'  # Pst1(Med) []
-        flicker_b = 'Pst2(Med)'  # Pst2(Med) []
-        flicker_c = 'Pst3(Med)'  # Pst3(Med) []
-
-        # Valores de la columna de fases de VTHD
-        vthd_a = 'THD U1(ProAct)'  # THD U1(ProAct) [%]
-        vthd_b = 'THD U2(ProAct)'  # THD U2(ProAct) [%]
-        vthd_c = 'THD U3(ProAct)'  # THD U3(ProAct) [%]
-
-        # Valores de la columna de desbalance
-        desbalance = 'DESBALANCE'  # DESBALANCE
-
-        # Definir un diccionario con los valores de las columnas
-        valores_columna = {
-            'voltaje_a': voltaje_a,
-            'voltaje_b': voltaje_b,
-            'voltaje_c': voltaje_c,
-            'flicker_a': flicker_a,
-            'flicker_b': flicker_b,
-            'flicker_c': flicker_c,
-            'vthd_a': vthd_a,
-            'vthd_b': vthd_b,
-            'vthd_c': vthd_c,
-            'desbalance': desbalance
-        }
+        # Obtener los valores de las columnas del analizador
+        valores_columna = obtener_valores_columna(analizador)
 
         # Obtener la información
         return metrel(ruta_archivo, filas, columnas, valores_columna)

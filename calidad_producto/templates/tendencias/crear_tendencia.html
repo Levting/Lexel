@@ -27,8 +27,8 @@
         <form class="needs-validation" action="{% url 'crear_tendencia_unico' %}" method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <div class="mb-3">
-            <input type="file" id="archivo_unico" name="archivo_unico" class="form-control" accept=".xlsx" required />
-            <div class="invalid-feedback">Por favor, seleccione un archivo .xlsx.</div>
+            <input type="file" id="archivo_unico" name="archivo_unico" class="form-control" accept=".xlsx,.xls" required />
+            <div class="invalid-feedback">Por favor, seleccione un archivo .xlsx o .xls.</div>
           </div>
           <button type="submit" class="btn btn-primary">Subir Tendencia</button>
         </form>
@@ -39,8 +39,8 @@
         <form class="needs-validation" action="{% url 'crear_tendencia_lote' %}" method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
           <div class="mb-3">
-            <input type="file" id="archivos_lote" name="archivos_lote" class="form-control" accept=".xlsx" multiple required />
-            <div class="invalid-feedback">Por favor, seleccione uno o varios archivos .xlsx.</div>
+            <input type="file" id="archivos_lote" name="archivos_lote" class="form-control" accept=".xlsx,.xls" multiple required />
+            <div class="invalid-feedback">Por favor, seleccione uno o varios archivos .xlsx o .xls.</div>
           </div>
           <button type="submit" class="btn btn-primary">Subir Lote de Tendencia</button>
         </form>

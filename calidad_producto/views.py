@@ -5,8 +5,8 @@ from .models import Archivo, Categoria, Tipo, Analizador
 from django.utils.timezone import localtime
 from babel.dates import format_datetime
 from django.shortcuts import render, redirect, get_object_or_404
-from .resource import depuracion_armonico as arm
-from .resource import depuracion_tendencia as ten
+from .resources import depuracion_armonico as arm
+from .resources import depuracion_tendencia as ten
 
 from django.db import DatabaseError
 from pandas.errors import EmptyDataError
@@ -23,7 +23,7 @@ def index(request):
 
 def vista_armonicos(request):
     """
-    Visita la página de armonicos
+    Visita la página de armonicos, la catego´ria es 1 y mostramos en la vista "armonicos.html"
     """
     archivos_formateados = obtener_archivos_por_categoria(1)
     return render(request, 'armonicos/armonicos.html', {'archivos': archivos_formateados})
@@ -69,7 +69,16 @@ def crear_armonico_unico(request):
     # analizador_id = 3  # METREL
 
     valor_porcentaje = 5
-    return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_armonico, 'vista_armonicos')
+
+    return procesar_archivo_unico(
+        request,
+        categoria_id,
+        tipo_id,
+        analizador_id,
+        valor_porcentaje,
+        depuracion_armonico,
+        'vista_armonicos'
+    )
 
 
 def crear_armonico_lote(request):
@@ -126,12 +135,13 @@ def depuracion_armonico(nuevo_archivo, analizador, valor_porcentaje):
     # Guardar los cambios en la base de datos
     nuevo_archivo.save()
 
+
 # ---------- TENDENCIA ----------
 
 
 def vista_tendencias(request):
     """
-    Visita la página de tendencias, obtenemos todos los datos de la base de datos con la temática de tendencias y mostramos en la vista tendencias.html
+    Visita la página de tendencias, la catego´ria es 2 y mostramos en la vista "tendencias.html"
     """
     archivos_formateados = obtener_archivos_por_categoria(2)
     return render(request, 'tendencias/tendencias.html', {'archivos': archivos_formateados})
@@ -141,6 +151,25 @@ def vista_tendencia_detalle(request, archivo_id):
     """
     Visita la página de detalle de tendencias, obtenemos el archivo seleccionado y mostramos en la vista "tendencia_detalle.html"
     """
+
+    # Obtener el archivo evitando que el servidor colapse
+    archivo = get_object_or_404(Archivo, id=archivo_id)
+
+    # Mostrar solamente el nombre del archivo, sin el "archivo/" al inicio
+    nombre_archivo = archivo.archivo.url.split('/')[-1]
+
+    # Obtener la informacion de archivo
+    archivo_info = archivo.informacion
+
+    # Formatear el nombre de la columna, eliminando los "_", capitalizando, y añadiendo sufijo o símbolo
+    archivo_info = {
+        columna.replace('_', ' ').capitalize(): f"{round(datos, 4)} %" if isinstance(datos, (int, float)) else datos
+        for columna, datos in archivo_info.items()
+    }
+
+    print("\nInformación del archivo seleccionado:\n", archivo_info)
+
+    return render(request, 'tendencias/tendencia_detalle.html', {'nombre_archivo': nombre_archivo, 'archivo_info': archivo_info})
 
 
 def vista_crear_tendencia(request):
@@ -154,14 +183,38 @@ def crear_tendencia_unico(request):
     """
     Crea un archivo tendencia de forma única, depura el archivo tendencia y mostrando un mensaje de éxito o error en la vista de tendencias.
     """
-    return procesar_archivo_unico(request, 'tendencia', depuracion_tendencia, 'vista_tendencias')
+
+    categoria_id = 2  # Tendencia
+
+    tipo_id = 1  # Monofásico
+    # tipo_id = 2  # Trifásico
+
+    analizador_id = 1  # SONEL
+    # analizador_id = 2  # AEMC
+    # analizador_id = 3  # METREL
+
+    valor_porcetaje = None  # Valor por defecto
+
+    return procesar_archivo_unico(request, categoria_id, tipo_id,  analizador_id,  valor_porcetaje, depuracion_tendencia, 'vista_tendencias')
 
 
 def crear_tendencia_lote(request):
     """
     Crea un archivo tendencia en lote, depura el archivo tendencia y mostrando un mensaje de éxito o error en la vista de tendencias.
     """
-    return procesar_archivos_lote(request, 'tendencia', depuracion_tendencia, 'vista_tendencias')
+
+    categoria_id = 2  # Tendencia, valor por defecto
+
+    tipo_id = 1  # Monofásico
+    # tipo_id = 2  # Trifásico
+
+    analizador_id = 1  # SONEL
+    # analizador_id = 2  # AEMC
+    # analizador_id = 3  # METREL
+
+    valor_porcentaje = None  # Valor por defecto
+
+    return procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_tendencia, 'vista_tendencias')
 
 
 def eliminar_tendencia(request, archivo_id):
@@ -171,8 +224,32 @@ def eliminar_tendencia(request, archivo_id):
     return eliminar_archivo(request, archivo_id, 'vista_tendencias')
 
 
-def depuracion_tendencia(archivo_excel):
-    print("Procesando archivo de tendencia...")
+def depuracion_tendencia(nuevo_archivo, analizador, valor_porcetaje):
+    """
+    Depura un archivo tendencia.
+
+    Parámetros:
+        nuevo_archivo: El archivo a depurar.
+        analizador: El analizador a utilizar.
+
+    Retorna:
+        informacion: La información depurada del archivo.
+    """
+
+    # Obtener la ruta del archivo
+    ruta_archivo = nuevo_archivo.archivo.path
+
+    # Obtener el nombre del analizador
+    analizador = analizador.nombre
+
+    # Obtener la informacion del analizador
+    informacion = ten.tipo_analizador(analizador, ruta_archivo)
+
+    # Actualizar la información del archivo
+    nuevo_archivo.informacion = informacion
+
+    # Guardar los cambios en la base de datos
+    nuevo_archivo.save()
 
 
 # --- METODOS ---
@@ -255,7 +332,8 @@ def procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_
 
         else:
             # Mostrar un mensaje de error si no se seleccionó un archivo
-            messages.error(request, 'Por favor, seleccione un archivo .xlsx o .xls.')
+            messages.error(
+                request, 'Por favor, seleccione un archivo .xlsx o .xls.')
 
     else:
         # Mostrar un mensaje de error si el formulario no es válido
@@ -323,7 +401,8 @@ def procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_
             return redirect(redireccion_vista)
         else:
             # Mostrar un mensaje de error si no se seleccionaron archivos
-            messages.error(request, 'Por favor, seleccione un archivo .xlsx o .xls.')
+            messages.error(
+                request, 'Por favor, seleccione un archivo .xlsx o .xls.')
     else:
         # Mostrar un mensaje de error si el formulario no es válido
         messages.error(request, 'Error al procesar el formulario.')

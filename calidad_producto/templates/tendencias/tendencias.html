@@ -43,6 +43,8 @@
         <tr>
           <th scope="col">#</th>
           <th scope="col">Archivo</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Analizado con</th>
           <th scope="col">Fecha de Subida</th>
           <th scope="col">Acciones</th>
         </tr>
@@ -52,9 +54,11 @@
           <tr>
             <th scope="row">{{ forloop.counter }}</th>
             <td>{{ archivo.archivo }}</td>
+            <td>{{ archivo.tipo }}</td>
+            <td>{{ archivo.analizador }}</td>
             <td>{{ archivo.subido_el }}</td>
             <td>
-              {% comment %}<a href="{% url 'tendencia_detalle' archivo.id %}" class="btn btn-primary btn-sm">Detalles</a> {% endcomment %}
+              <a href="{% url 'tendencia_detalle' archivo.id %}" class="btn btn-primary btn-sm">Detalles</a>
               <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ archivo.id }}">Eliminar</button>
             </td>
           </tr>
