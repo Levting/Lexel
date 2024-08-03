@@ -297,10 +297,6 @@ def sonel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), val
         print("No se pudo leer el archivo.")
         return None
 
-    # Procesamiento del DataFrame
-    print("\nDF")
-    print(df)
-
     # Seleccionar las filas y columnas deseadas
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
@@ -313,9 +309,6 @@ def sonel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), val
     # Convertir los datos a tipo numérico y llenar NaN con 0
     df_seleccionado = df_seleccionado.apply(
         pd.to_numeric, errors='coerce').fillna(0)
-
-    print("\nDF Resultante")
-    print(df_seleccionado)
 
     # Obtener información procesada
     informacion = obtener_informacion(df_seleccionado, valores_columna)
@@ -345,9 +338,6 @@ def aemc(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valo
         print("No se pudo leer el archivo.")
         return None
 
-    print("\nDF")
-    print(df)
-
     # Seleccionar las filas y columnas deseadas
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
@@ -365,9 +355,6 @@ def aemc(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), valo
     # Convertir los datos a tipo numérico y llenar NaN con 0
     df_seleccionado = df_seleccionado.apply(
         pd.to_numeric, errors='coerce').fillna(0)
-
-    print("\nDF Resultado")
-    print(df_seleccionado)
 
     # Obtener la inoformación procesada
     informacion = obtener_informacion(df_seleccionado, valores_columna)
@@ -397,9 +384,6 @@ def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), va
         print("No se pudo leer el archivo.")
         return None
 
-    print("\nDF")
-    print(df)
-
     # Seleccionar las filas y columnas deseadas
     df_seleccionado = seleccionar_filas_columnas(df, filas, columnas)
 
@@ -416,9 +400,6 @@ def metrel(ruta_archivo, filas=slice(None, None), columnas=slice(None, None), va
     # Convertir los datos a tipo numérico y llenar NaN con 0
     df_seleccionado = df_seleccionado.apply(
         pd.to_numeric, errors='coerce').fillna(0)
-
-    print("\nDF Resultado")
-    print(df_seleccionado)
 
     # Obtener información procesada
     informacion = obtener_informacion(df_seleccionado, valores_columna)
@@ -464,8 +445,6 @@ def tipo_analizador(analizador, ruta_archivo):
 
         # Obtener los valores de las columnas del analizador
         valores_columna = obtener_valores_columna(analizador)
-
-        print(f"Valores columna: {valores_columna}")
 
         # Obtener la información
         return sonel(ruta_archivo, filas, columnas, valores_columna)

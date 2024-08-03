@@ -12,9 +12,25 @@
         {% for message in messages %}
           <div class="alert 
             {% if message.tags == 'success' %}
+              
+              
+              
+              
               alert-success
+
+
+
+
             {% elif message.tags == 'error' %}
+              
+              
+              
+              
               alert-danger
+
+
+
+
             {% endif %}"
             role="alert">{{ message }}</div>
         {% endfor %}
@@ -26,10 +42,39 @@
         <h6 class="mb-3">Cargar solamente un archivo</h6>
         <form class="needs-validation" action="{% url 'crear_tendencia_unico' %}" method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
+
+          <div class="row">
+            <!-- Select para Tipo -->
+            <div class="col-md-6 mb-3">
+              <label for="tipo" class="form-label">Tipo</label>
+              <select id="tipo" name="tipo" class="form-select" required>
+                <option value="" disabled selected>Seleccione el tipo</option>
+                {% for tipo in tipos %}
+                  <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Por favor, seleccione un tipo.</div>
+            </div>
+
+            <!-- Select para Analizador -->
+            <div class="col-md-6 mb-3">
+              <label for="analizador" class="form-label">Analizador</label>
+              <select id="analizador" name="analizador" class="form-select" required>
+                <option value="" disabled selected>Seleccione el analizador</option>
+                {% for analizador in analizadores %}
+                  <option value="{{ analizador.id }}">{{ analizador.nombre }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Por favor, seleccione un analizador.</div>
+            </div>
+          </div>
+
+          <!-- Input para el archivo -->
           <div class="mb-3">
             <input type="file" id="archivo_unico" name="archivo_unico" class="form-control" accept=".xlsx,.xls" required />
             <div class="invalid-feedback">Por favor, seleccione un archivo .xlsx o .xls.</div>
           </div>
+
           <button type="submit" class="btn btn-primary">Subir Tendencia</button>
         </form>
       </div>

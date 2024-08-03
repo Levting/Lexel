@@ -176,7 +176,18 @@ def vista_crear_tendencia(request):
     """
     Visita la página de crear tendencia, mostramos la vista "crear_tendencia.html"
     """
-    return render(request, 'tendencias/crear_tendencia.html')
+
+    # Obtenemos todos los tipos y analizadores
+    tipos = Tipo.objects.all()
+    analizadores = Analizador.objects.all()
+
+    # Pasar los datos a la plantilla
+    context = {
+        'tipos': tipos,
+        'analizadores': analizadores
+    }
+
+    return render(request, 'tendencias/crear_tendencia.html', context)
 
 
 def crear_tendencia_unico(request):
@@ -185,17 +196,23 @@ def crear_tendencia_unico(request):
     """
 
     categoria_id = 2  # Tendencia
+    
+    # Obtener los valores del formulario
+    if request.method == 'POST':
+        tipo_id = request.POST.get('tipo')
+        analizador_id = request.POST.get('analizador')
+        valor_porcentaje =  None
 
-    tipo_id = 1  # Monofásico
-    # tipo_id = 2  # Trifásico
+        print(f"\nTipo: {tipo_id}, Analizador: {analizador_id}\n")
 
-    analizador_id = 1  # SONEL
-    # analizador_id = 2  # AEMC
-    # analizador_id = 3  # METREL
+        # Procesar el archivo
+        return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_tendencia, 'vista_tendencias')
+    
+    # Si la solicitud no es POST, redirigir a la vista de crear tendencia
+    return render(request, 'tendencias/crear_tendencia.html')
 
-    valor_porcetaje = None  # Valor por defecto
 
-    return procesar_archivo_unico(request, categoria_id, tipo_id,  analizador_id,  valor_porcetaje, depuracion_tendencia, 'vista_tendencias')
+    
 
 
 def crear_tendencia_lote(request):
