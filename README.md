@@ -49,9 +49,6 @@ Asegúrate de tener instalados los siguientes requisitos:
 
     b. Si es necesario, crea un nuevo usuario y asegúrate de que tenga todos los privilegios sobre la base de datos `lexel`.
 
-    ![Creación de base de datos](image.png)
-    ![Configuración de usuario](image-1.png)
-
 2. **Configura la conexión a la base de datos:**
 
     Dirígete a `lexel/settings.py` y ubica el siguiente bloque de código. Cambia la contraseña de la base de datos por la tuya.
@@ -95,5 +92,5 @@ Asegúrate de tener instalados los siguientes requisitos:
 - **`requirements.txt`:** Lista de dependencias del proyecto.
 
 - **`calidad_producto/models.py`:** Modelos del sistema, se especifica el archivo, categoria, tipo, etc. Relaciones entre si.
-- **`calidad_producto/resource/depuracion_armonico.py`:** Contiene los pasos de depuracion, en obtener los valores mayores al 5% para cada modelo de analizador.
-- **`calidad_producto/models.py`:** Modelos del sistema, se especifica el archivo, categoria, tipo, etc.
+- **`calidad_producto/resources/depuracion_armonico.py`:** Contiene los pasos de depuracion, en obtener los valores mayores al 5% para cada modelo de analizador.
+- **`calidad_producto/resources/depuracion_tendencia.py`:** Conteiene los pasos de depuración en obtener los porcentajes de desviacion, flicker, desbalance para tipos monofásicos y trifásicos.
