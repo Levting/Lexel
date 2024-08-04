@@ -163,7 +163,7 @@ def vista_tendencia_detalle(request, archivo_id):
 
     # Formatear el nombre de la columna, eliminando los "_", capitalizando, y añadiendo sufijo o símbolo
     archivo_info = {
-        columna.replace('_', ' ').capitalize(): f"{round(datos, 4)} %" if isinstance(datos, (int, float)) else datos
+        columna.replace('_', ' ').capitalize(): f"{round(datos, 4)}" if isinstance(datos, (int, float)) else datos
         for columna, datos in archivo_info.items()
     }
 
@@ -196,23 +196,18 @@ def crear_tendencia_unico(request):
     """
 
     categoria_id = 2  # Tendencia
-    
+
     # Obtener los valores del formulario
     if request.method == 'POST':
         tipo_id = request.POST.get('tipo')
         analizador_id = request.POST.get('analizador')
-        valor_porcentaje =  None
-
-        print(f"\nTipo: {tipo_id}, Analizador: {analizador_id}\n")
+        valor_porcentaje = None
 
         # Procesar el archivo
         return procesar_archivo_unico(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_tendencia, 'vista_tendencias')
-    
+
     # Si la solicitud no es POST, redirigir a la vista de crear tendencia
     return render(request, 'tendencias/crear_tendencia.html')
-
-
-    
 
 
 def crear_tendencia_lote(request):
@@ -222,16 +217,17 @@ def crear_tendencia_lote(request):
 
     categoria_id = 2  # Tendencia, valor por defecto
 
-    tipo_id = 1  # Monofásico
-    # tipo_id = 2  # Trifásico
+    # Obtener los valores del formulario
+    if request.method == 'POST':
+        tipo_id = request.POST.get('tipo')
+        analizador_id = request.POST.get('analizador')
+        valor_porcentaje = None
 
-    analizador_id = 1  # SONEL
-    # analizador_id = 2  # AEMC
-    # analizador_id = 3  # METREL
+        # Procesar el archivo
+        return procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_tendencia, 'vista_tendencias')
 
-    valor_porcentaje = None  # Valor por defecto
-
-    return procesar_archivos_lote(request, categoria_id, tipo_id, analizador_id, valor_porcentaje, depuracion_tendencia, 'vista_tendencias')
+    # Si la solicitud no es POST, redirigir a la vista de crear tendencia
+    return render(request, 'tendencias/crear_tendencia.html')
 
 
 def eliminar_tendencia(request, archivo_id):

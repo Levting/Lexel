@@ -15,9 +15,7 @@
               
               
               
-              
               alert-success
-
 
 
 
@@ -25,9 +23,7 @@
               
               
               
-              
               alert-danger
-
 
 
 
@@ -42,6 +38,13 @@
         <h6 class="mb-3">Cargar solamente un archivo</h6>
         <form class="needs-validation" action="{% url 'crear_tendencia_unico' %}" method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
+
+          <!-- Input para el archivo -->
+          <div class="mb-3">
+            <label for="archivo_unico" class="form-label">Archivo</label>
+            <input type="file" id="archivo_unico" name="archivo_unico" class="form-control" accept=".xlsx,.xls" required />
+            <div class="invalid-feedback">Por favor, seleccione un archivo .xlsx o .xls.</div>
+          </div>
 
           <div class="row">
             <!-- Select para Tipo -->
@@ -69,12 +72,6 @@
             </div>
           </div>
 
-          <!-- Input para el archivo -->
-          <div class="mb-3">
-            <input type="file" id="archivo_unico" name="archivo_unico" class="form-control" accept=".xlsx,.xls" required />
-            <div class="invalid-feedback">Por favor, seleccione un archivo .xlsx o .xls.</div>
-          </div>
-
           <button type="submit" class="btn btn-primary">Subir Tendencia</button>
         </form>
       </div>
@@ -83,10 +80,40 @@
         <h6 class="mb-3">Cargar más de un archivo</h6>
         <form class="needs-validation" action="{% url 'crear_tendencia_lote' %}" method="post" enctype="multipart/form-data" novalidate>
           {% csrf_token %}
+
+          <!-- Input para los archivos -->
           <div class="mb-3">
+            <label for="archivo_unico" class="form-label">Archivos</label>
             <input type="file" id="archivos_lote" name="archivos_lote" class="form-control" accept=".xlsx,.xls" multiple required />
             <div class="invalid-feedback">Por favor, seleccione uno o varios archivos .xlsx o .xls.</div>
           </div>
+
+          <div class="row">
+            <!-- Select para Tipo -->
+            <div class="col-md-6 mb-3">
+              <label for="tipo" class="form-label">Tipo</label>
+              <select id="tipo" name="tipo" class="form-select" required>
+                <option value="" disabled selected>Seleccione el tipo</option>
+                {% for tipo in tipos %}
+                  <option value="{{ tipo.id }}">{{ tipo.nombre }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Por favor, seleccione un tipo.</div>
+            </div>
+
+            <!-- Select para Analizador -->
+            <div class="col-md-6 mb-3">
+              <label for="analizador" class="form-label">Analizador</label>
+              <select id="analizador" name="analizador" class="form-select" required>
+                <option value="" disabled selected>Seleccione el analizador</option>
+                {% for analizador in analizadores %}
+                  <option value="{{ analizador.id }}">{{ analizador.nombre }}</option>
+                {% endfor %}
+              </select>
+              <div class="invalid-feedback">Por favor, seleccione un analizador.</div>
+            </div>
+          </div>
+
           <button type="submit" class="btn btn-primary">Subir Lote de Tendencia</button>
         </form>
       </div>

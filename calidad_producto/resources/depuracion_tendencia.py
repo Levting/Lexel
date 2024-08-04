@@ -223,7 +223,7 @@ def obtener_informacion(df, valores_columna):
             valor_desviacion = calcular_porcentaje_desviacion(
                 df, columna_voltaje)
             if valor_desviacion is not None:
-                informacion[f'porcentaje_desviacion_voltaje_fase_{fase}'] = valor_desviacion
+                informacion[f'desviacion_voltaje_fase_{fase}'] = valor_desviacion
 
     # FLICKER
     for fase in ['a', 'b', 'c']:
@@ -231,7 +231,7 @@ def obtener_informacion(df, valores_columna):
         if columna_flicker:
             valor_flicker = calular_porcentaje_flicker(df, columna_flicker)
             if valor_flicker is not None:
-                informacion[f'porcentaje_flicker_fase_{fase}'] = valor_flicker
+                informacion[f'flicker_fase_{fase}'] = valor_flicker
 
     # VTHD
     for fase in ['a', 'b', 'c']:
@@ -240,7 +240,7 @@ def obtener_informacion(df, valores_columna):
             valor_vthd = calcular_porcentaje_vthd(
                 df, columna_vthd)
             if valor_vthd is not None:
-                informacion[f'porcentaje_vthd_fase_{fase}'] = valor_vthd
+                informacion[f'vthd_fase_{fase}'] = valor_vthd
 
     # DESVALANCE
     # Solamente para trifásico
@@ -248,7 +248,7 @@ def obtener_informacion(df, valores_columna):
     if columna_desbalance:
         valor_desbalance = calular_desbalance(df, columna_desbalance)
         if valor_desbalance is not None:
-            informacion[f'porcentaje_desbalance'] = valor_desbalance
+            informacion[f'desbalance'] = valor_desbalance
 
     return informacion
 
