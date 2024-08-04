@@ -1,4 +1,4 @@
-{% extends 'calidad_producto/base.html' %}
+{%extends "calidad_producto/base.html" %}
 
 {% block title %}
   Detalles
@@ -13,8 +13,7 @@
       <tr>
         <tr>
           <th scope="col">#</th>
-          <th scope="col">Nombre de la Columna</th>
-          <th scope="col">Conteo</th>
+          <th scope="col">Descripcion</th>
           <th scope="col">Valor (%)</th>
         </tr>
       </tr>
@@ -22,8 +21,7 @@
         <tr>
           <th scope="row">{{ forloop.counter }}
           <td>{{ columna }}</td>
-          <td>{{ info.conteo }}</td>
-          <td>{{ info.porcentaje }} %</td>
+          <td>{{ info }} %</td>
         </tr>
       {% endfor %}
     </table>

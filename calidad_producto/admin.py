@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Archivo, ArchivoInfo
+from .models import Archivo, Categoria, Tipo, Analizador
 
 
 class ArchivoAdmin(admin.ModelAdmin):
@@ -8,5 +8,7 @@ class ArchivoAdmin(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(Archivo, ArchivoAdmin)
-admin.site.register(ArchivoInfo)
+admin.site.register(Categoria)
+admin.site.register(Tipo)
+admin.site.register(Analizador)
 # admin.site.register(ArchivoAdmin)
