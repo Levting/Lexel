@@ -90,6 +90,7 @@ Asegúrate de tener instalados los siguientes requisitos:
 
 - **`lexel/settings.py`:** Contiene la configuración del proyecto, incluida la conexión a la base de datos.
 - **`requirements.txt`:** Lista de dependencias del proyecto.
+- **`Lexcel.excalidraw`:** Es un dibujo del proyecto que contiene el modelo de la base de datos. Para verlo ingresa a `https://excalidraw.com/`.
 
 - **`calidad_producto/models.py`:** Modelos del sistema, se especifica el archivo, categoria, tipo, etc. Relaciones entre si.
 - **`calidad_producto/resources/depuracion_armonico.py`:** Contiene los pasos de depuracion, en obtener los valores mayores al 5% para cada modelo de analizador.
